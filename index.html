@@ -349,9 +349,16 @@ const ROLE = {
 const GROUPS = ['head', 'top', 'eyes', 'brows', 'nose', 'mouth', 'extras'];
 const GEN = { head: gHead, top: gTop, eyes: gEyes, brows: gBrows, nose: gNose, mouth: gMouth, extras: gExtras };
 function finish(m, k, g) { for (const id in g) { const p = g[id]; p.g = k; p.pts = outline(p.type, p.p); } m.g[k] = g; }
-function paint(m) { for (const k of GROUPS) for (const id in m.g[k]) { const p = m.g[k][id]; p.col = ROLE[p.role](m.s); } }
+// most of the time the shapes are bare coloured card; now and then a thin edge: black, white, or of many colours
+function lineStyle() { const r = R(); return r < 0.7 ? 'none' : r < 0.82 ? 'black' : r < 0.92 ? 'white' : 'mix'; }
+function paint(m) {
+  for (const k of GROUPS) for (const id in m.g[k]) {
+    const p = m.g[k][id]; p.col = ROLE[p.role](m.s);
+    p.lc = m.ls === 'mix' ? pick(Object.keys(COL).filter(c => c !== p.col)) : null;
+  }
+}
 function newMonster() {
-  const m = { g: {}, s: scheme(), line: pick([0, 1, 1, 1, 1.6]) };
+  const m = { g: {}, s: scheme(), ls: lineStyle() };
   for (const k of GROUPS) finish(m, k, GEN[k](m));
   paint(m);
   return m;
@@ -370,7 +377,7 @@ function mutate(m) {
   else if (r < 0.8) regen('brows');
   else if (r < 0.9) { regen('head'); regen('top'); regen('extras'); }
   else regen('extras');
-  if (R() < 0.1) m.line = pick([0, 1, 1, 1.6]);
+  if (R() < 0.1) m.ls = lineStyle();
   paint(m);
 }
 function targetsOf(m) { const T = {}; for (const k of GROUPS) Object.assign(T, m.g[k]); return T; }
@@ -444,6 +451,7 @@ const MOODS = {
             A: { breathe: 0.02, mouth: 0.22, sway: 0.1, face: 0.7, tent: 1.2, gaze: 1.2 }, full: 0.2 }
 };
 const cur = { tempo: 0.35, breathe: 0.02, mouth: 0.06, sway: 0.05, face: 0.6, tent: 1, gaze: 0.6, line: 0 };
+let lastLs = 'black';
 let mood = 'sogno', moodUntil = 0, mutNext = 0, M = null, ft = 0, bpm = 96, beat0 = 0, blinkAt = 3, blinkEach = false;
 const Lf = { rot: 0, dx: 0, dy: 0, fs: 1, hs: 1, mouth: 1, gx: 0, gy: 0, blink: 1 };
 
@@ -462,7 +470,8 @@ function life(t, dt) {
   const md = MOODS[mood], k = 1 - Math.exp(-dt * 0.6);
   cur.tempo += (md.tempo - cur.tempo) * k;
   for (const a in md.A) cur[a] += (md.A[a] - cur[a]) * k;
-  cur.line += ((M ? M.line : 0) - cur.line) * (1 - Math.exp(-dt * 2));
+  if (M && M.ls !== 'none') lastLs = M.ls;
+  cur.line += ((M && M.ls !== 'none' ? 1 : 0) - cur.line) * (1 - Math.exp(-dt * 2));
   ft += dt * cur.tempo;
   let pulse = 0;
   if (md.beat) { const P = 60 / bpm, ph = ((t - beat0) % P) / P; pulse = Math.exp(-ph * 7); }
@@ -485,40 +494,19 @@ const blinkOf = (ex) => {
 
 /* ================= the ground changes colour too ================= */
 const BGS = ['black', 'red', 'yellow', 'blue', 'white'];
-const bg = { shown: 'black', target: 'black', ct: false, t0: 0, dur: 1, mode: 'circle', ox: 0.5, oy: 0.5, ang: 0, next: 10 };
+const bg = { shown: 'black', next: 10 };
 function bgUpdate(t) {
-  if (bg.ct && t >= bg.t0 + bg.dur) { bg.shown = bg.target; bg.ct = false; }
-  if (bg.ct || !M) return;
+  if (!M) return;
   const avoid = [M.s.hc, M.s.top];                   // never the colour of the head or of the horns: the monster must stand out
   const clash = avoid.includes(bg.shown);
   if (t < bg.next && !clash) return;
   const md = MOODS[mood], tempo = Math.max(0.4, cur.tempo);
   const options = BGS.filter(c => !avoid.includes(c) && c !== bg.shown);
-  bg.target = bg.shown !== 'black' && !avoid.includes('black') && R() < 0.25 ? 'black' : pick(options);
-  bg.mode = pick(['circle', 'circle', 'face', 'sweep', 'blinds']);
-  bg.ox = R(); bg.oy = R(); bg.ang = pick([0, Math.PI / 2, Math.PI, -Math.PI / 2]) + (R() < 0.3 ? rnd(-0.6, 0.6) : 0);
-  bg.ct = true; bg.t0 = t;
-  if (md.beat) {
-    const P = 60 / bpm;
-    bg.dur = P * pick([0.5, 1, 2]);
-    bg.next = beat0 + (Math.floor((t - beat0) / P) + pick([4, 8, 8, 16])) * P;
-  } else {
-    bg.dur = (clash ? rnd(0.6, 1.2) : rnd(0.9, 2.8)) / tempo;
-    bg.next = t + bg.dur + rnd(5, 16) / tempo;
-  }
+  bg.shown = bg.shown !== 'black' && !avoid.includes('black') && R() < 0.25 ? 'black' : pick(options);   // a dry cut
+  if (md.beat) { const P = 60 / bpm; bg.next = beat0 + (Math.floor((t - beat0) / P) + pick([4, 8, 8, 16])) * P; }
+  else bg.next = t + rnd(4, 15) / tempo;
 }
-function drawBg(t) {
-  ctx.fillStyle = COL[bg.shown]; ctx.fillRect(0, 0, W, H);
-  if (!bg.ct) return;
-  const e = EASE.inOutCubic(clamp((t - bg.t0) / bg.dur, 0, 1)), D = Math.hypot(W, H);
-  ctx.fillStyle = COL[bg.target];
-  switch (bg.mode) {
-    case 'circle': ctx.beginPath(); ctx.arc(bg.ox * W, bg.oy * H, e * D, 0, TAU); ctx.fill(); break;
-    case 'face': ctx.beginPath(); ctx.arc(CX, CY, e * D, 0, TAU); ctx.fill(); break;
-    case 'sweep': ctx.save(); ctx.translate(W / 2, H / 2); ctx.rotate(bg.ang); ctx.fillRect(-D / 2, -D / 2, D * e, D); ctx.restore(); break;
-    case 'blinds': { const n = 7; for (let i = 0; i < n; i++) { const k = clamp(e * 1.6 - i / n * 0.6, 0, 1); ctx.fillRect(i * W / n, 0, W / n * k + 1, H); } break; }
-  }
-}
+function drawBg() { ctx.fillStyle = COL[bg.shown]; ctx.fillRect(0, 0, W, H); }
 
 /* ================= drawing ================= */
 function piecePath(d, x, y, w, h, r) {
@@ -561,11 +549,15 @@ function drawPiece(d, t) {
     } else { ctx.translate(cx, cy); ctx.rotate(rr + d.cang); ctx.fillRect(-L, -L, 2 * L * e, 2 * L); }
     ctx.restore();
   }
-  if (cur.line > 0.05) { ctx.lineWidth = cur.line * 0.006 * S; ctx.strokeStyle = '#000'; ctx.lineJoin = 'round'; ctx.stroke(path); }
+  if (cur.line > 0.03) {
+    ctx.lineWidth = cur.line * 0.0045 * S; ctx.lineJoin = 'round';
+    ctx.strokeStyle = lastLs === 'white' ? COL.white : lastLs === 'mix' ? COL[m.lc || 'black'] : COL.black;
+    ctx.stroke(path);
+  }
 }
 function render(t) {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  drawBg(t);
+  drawBg();
   const arr = [...disp.values()].sort((a, b) => a.z - b.z);
   for (const d of arr) drawPiece(d, t);
 }
@@ -584,7 +576,7 @@ function frame() {
     mutNext = t + 4;
   } else if (t >= mutNext) {
     const md = MOODS[mood];
-    if (R() < md.full) M = Object.assign(newMonster(), { line: M.line });
+    if (R() < md.full) { const ls = M.ls; M = newMonster(); if (R() < 0.7) { M.ls = ls; paint(M); } }
     else mutate(M);
     T = targetsOf(M);
     retarget(t, md);
