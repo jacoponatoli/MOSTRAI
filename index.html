@@ -26,7 +26,7 @@
 <aside id="info">
   <h1>MOSTRAI</h1>
   <p>A single monstrous face, always new.</p>
-  <p>The machine invents a monster and never stops changing it: a face made of geometric shapes in the three primary colours, white and black, on a ground that changes colour too. Eyes, horns, teeth, mouths, beaks, ears and tentacles are reinvented at every moment — how many, where, of what shape and colour — while the face breathes, blinks, looks around, chews and sways, at ever-changing speeds and rhythms.</p>
+  <p>The machine invents a monster and never stops changing it: a face made of geometric shapes in the three primary colours, white and black, on a ground that changes colour too. It mixes the grammar of many monsters without copying any: Mesoamerican and Andean masks, Amazonian feather crowns, Caribbean carnival, the demon faces of India, Sri Lanka and Bali, Himalayan masks, oni and yokai, anime, taotie and opera faces, African and Oceanic masks, gorgons, medieval grotesques, commedia and carnival, skulls, cartoons, robots, aliens, insects, sea creatures, cubism, Miró, the Bauhaus, pixels, the first idols. Eyes, horns, crowns, teeth, tongues, beaks, ears and tentacles are reinvented at every moment, while the face breathes, blinks, looks around, chews and sways, at ever-changing speeds and rhythms.</p>
   <p><i>monstrum</i>: from <i>monere</i>, to warn. Cicero heard in it <i>monstrare</i>, to show.</p>
   <p>A project by Jacopo Natoli, 2026</p>
   <p class="small">Double-click or F: fullscreen · Cmd/Ctrl+F or P: save a photo of the monster · I: these notes</p>
@@ -69,16 +69,15 @@ function resize() {
   const d = Math.min(window.devicePixelRatio || 1, 2);
   W = Math.round(innerWidth * d); H = Math.round(innerHeight * d);
   cv.width = W; cv.height = H;
-  S = Math.min(H / 1.75, W / 1.3);
-  CX = W / 2; CY = H * 0.57;
+  try { fit(true); } catch (e) {}   // (not ready at the very first call)
 }
 addEventListener('resize', resize);
 resize();
 
 /* ================= shapes as outlines of N points, so that any shape can melt into any other ================= */
-const N = 72;
+const N = 96;
 function dense(type, p) {
-  const P = [];
+  const P = []; let nrm = false;
   const arc = (cx, cy, rx, ry, a0, a1, n) => { for (let i = 0; i <= n; i++) { const a = a0 + (a1 - a0) * i / n; P.push([cx + rx * Math.cos(a), cy + ry * Math.sin(a)]); } };
   const quad = (x0, y0, qx, qy, x1, y1, n, from = 0, to = 1) => { for (let i = 0; i <= n; i++) { const t = from + (to - from) * i / n, u = 1 - t; P.push([u * u * x0 + 2 * u * t * qx + t * t * x1, u * u * y0 + 2 * u * t * qy + t * t * y1]); } };
   const poly = q => q.forEach(v => P.push(v));
@@ -93,10 +92,52 @@ function dense(type, p) {
     case 'almond': quad(-0.5, 0, 0, -1, 0.5, 0, 30, 0.5, 1); quad(0.5, 0, 0, 1, -0.5, 0, 60); quad(-0.5, 0, 0, -1, 0.5, 0, 30, 0, 0.5); break;
     case 'almondV': quad(0, -0.5, 1, 0, 0, 0.5, 60); quad(0, 0.5, -1, 0, 0, -0.5, 60); break;
     case 'zig': { const n = 8; for (let i = 0; i <= n; i++) P.push([-0.5 + i / n, i % 2 ? -0.5 : -0.15]); for (let i = n; i >= 0; i--) P.push([-0.5 + i / n, i % 2 ? 0.5 : 0.15]); break; }
-    case 'horn': { const cu = p ? p.curl : 0.5; quad(-0.5, 0.5, -0.45, -0.2, -0.2 + cu * 0.9, -0.5, 40); quad(-0.2 + cu * 0.9, -0.5, 0.1, 0, 0.5, 0.5, 40); break; }
-    case 'poly': { const n = p ? p.n : 6; for (let i = 0; i < n; i++) { const a = -Math.PI / 2 + i * TAU / n, rr = 0.5 * (p ? p.j[i] : 1); P.push([Math.cos(a) * rr, Math.sin(a) * rr]); } break; }
-    case 'star': { const n = p ? p.n : 10; for (let i = 0; i < n; i++) { const a = -Math.PI / 2 + i * TAU / n, rr = i % 2 ? 0.5 * (p ? p.inner + 0.25 : 0.75) : 0.5; P.push([Math.cos(a) * rr, Math.sin(a) * rr]); } break; }
+    case 'horn': { const cu = p && p.curl !== undefined ? p.curl : 0.5; quad(-0.5, 0.5, -0.45, -0.2, -0.2 + cu * 0.9, -0.5, 40); quad(-0.2 + cu * 0.9, -0.5, 0.1, 0, 0.5, 0.5, 40); break; }
+    case 'poly': { const n = p && p.j ? p.n : 6; for (let i = 0; i < n; i++) { const a = -Math.PI / 2 + i * TAU / n, rr = 0.5 * (p && p.j ? p.j[i] : 1); P.push([Math.cos(a) * rr, Math.sin(a) * rr]); } break; }
+    case 'star': { const n = p && p.n || 10; for (let i = 0; i < n; i++) { const a = -Math.PI / 2 + i * TAU / n, rr = i % 2 ? 0.5 * (p && p.inner ? p.inner + 0.25 : 0.75) : 0.5; P.push([Math.cos(a) * rr, Math.sin(a) * rr]); } break; }
+    case 'trap': { const k = p && p.k || 0.6; poly([[-0.5 * k, -0.5], [0.5 * k, -0.5], [0.5, 0.5], [-0.5, 0.5]]); break; }
+    case 'rtri': poly([[-0.5, -0.5], [0.5, 0.5], [-0.5, 0.5]]); break;
+    case 'sq': case 'cleft': {
+      const e = 2 / (type === 'sq' && p && p.e || 4);
+      for (let i = 0; i < 120; i++) { const a = -Math.PI / 2 + i * TAU / 120, c = Math.cos(a), s = Math.sin(a); let x = 0.5 * Math.sign(c) * Math.pow(Math.abs(c), e), y = 0.5 * Math.sign(s) * Math.pow(Math.abs(s), e); if (type === 'cleft' && y < 0 && Math.abs(x) < 0.2) y += (0.2 - Math.abs(x)) / 0.2 * 0.28; P.push([x, y]); }
+      break;
+    }
+    case 'capsule': { const c = p && p.c || 0.25; arc(0, -0.5 + c, 0.5, c, Math.PI, TAU, 30); arc(0, 0.5 - c, 0.5, c, 0, Math.PI, 30); break; }
+    case 'drop': case 'flame':
+      for (let i = 0; i < 120; i++) { const t = i * TAU / 120, y = -Math.cos(t); let x = Math.sin(t) * Math.pow(Math.sin(t / 2), 1.5); if (type === 'flame') x += 0.55 * Math.pow((1 - y) / 2, 2); P.push([x, y]); }
+      nrm = true; break;
+    case 'heart': for (let i = 0; i < 120; i++) { const t = i * TAU / 120; P.push([16 * Math.pow(Math.sin(t), 3), -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t))]); } nrm = true; break;
+    case 'cloud': { const n = p && p.n || 7; for (let i = 0; i < 180; i++) { const a = i * TAU / 180, r = 0.78 + 0.22 * Math.abs(Math.sin(n * a / 2)); P.push([Math.cos(a) * r, Math.sin(a) * r]); } nrm = true; break; }
+    case 'gear': { const n = p && p.n || 8; for (let i = 0; i < n; i++) for (let j = 0; j < 4; j++) { const a = -Math.PI / 2 + (i + j / 4) * TAU / n, r = j < 2 ? 0.5 : 0.37; P.push([Math.cos(a) * r, Math.sin(a) * r]); } break; }
+    case 'bolt': poly([[0.3, -0.5], [0.03, -0.12], [0.35, -0.12], [-0.15, 0.5], [-0.02, 0.08], [-0.35, 0.08], [0.15, -0.5]]); break;
+    case 'cross': { const k = (p && p.k || 0.34) / 2; poly([[-k, -0.5], [k, -0.5], [k, -k], [0.5, -k], [0.5, k], [k, k], [k, 0.5], [-k, 0.5], [-k, k], [-0.5, k], [-0.5, -k], [-k, -k]]); break; }
+    case 'step': { const n = p && p.n || 3, A = [], B = []; for (let i = 0; i < n; i++) { const w = 0.5 * (n - i) / n, y0 = 0.5 - i / n, y1 = 0.5 - (i + 1) / n; A.push([-w, y0], [-w, y1]); B.unshift([w, y0]); B.unshift([w, y1]); } poly(A.concat(B)); break; }
+    case 'spiral': {
+      const turns = p && p.t || 1.75, th = 0.34 / (turns + 0.6), O = [], I = [];
+      for (let i = 0; i <= 70; i++) { const u = i / 70, a = u * turns * TAU, r = 0.06 + (0.5 - th / 2 - 0.06) * u, wd = th * (0.35 + 0.65 * Math.min(1, u * 3)); O.push([Math.cos(a) * (r + wd / 2), Math.sin(a) * (r + wd / 2)]); I.unshift([Math.cos(a) * (r - wd / 2), Math.sin(a) * (r - wd / 2)]); }
+      poly(O.concat(I)); nrm = true; break;
+    }
+    case 'snake': {
+      const A = p && p.A || 0.28, kk = p && p.k || 2, f = p && p.f || 0, Lt = [], Rt = [];
+      for (let i = 0; i <= 50; i++) { const v = i / 50, cx = A * Math.sin(v * Math.PI * kk + f) * Math.min(1, v * 2.5), hw = 0.11 * (1 - 0.7 * v) + 0.07 * Math.exp(-Math.pow((v - 0.92) / 0.06, 2)); Lt.push([cx - hw, 0.5 - v]); Rt.unshift([cx + hw, 0.5 - v]); }
+      poly(Lt.concat(Rt)); break;
+    }
+    case 'crescent': {
+      const T = p && p.T || 0.28, q = p && p.q || 0.45, fl = p && p.fl, O = [], I = [];
+      for (let i = 0; i <= 60; i++) { const u = i / 60, a = -q + (Math.PI + 2 * q) * u, th = fl ? T : T * Math.sin(Math.PI * u) + 0.004; O.push([0.5 * Math.cos(a), 0.5 * Math.sin(a)]); I.unshift([(0.5 - th) * Math.cos(a), (0.5 - th) * Math.sin(a)]); }
+      poly(O.concat(I)); nrm = true; break;
+    }
+    case 'frond': { const n = p && p.n || 4; for (let i = 0; i < 180; i++) { const t = i * TAU / 180, mm = 0.4 + 0.6 * Math.abs(Math.sin(n * t)); P.push([0.5 * Math.sin(t) * mm, -0.5 * Math.cos(t)]); } break; }
+    case 'blob': { const a = p && p.a || [0.15, 0.1, 0.05], f = p && p.f || [0, 1, 2]; for (let i = 0; i < 120; i++) { const t = i * TAU / 120, r = 1 + a[0] * Math.sin(2 * t + f[0]) + a[1] * Math.sin(3 * t + f[1]) + a[2] * Math.sin(5 * t + f[2]); P.push([Math.cos(t) * r, Math.sin(t) * r]); } nrm = true; break; }
+    case 'quarter': P.push([-0.5, 0.5], [-0.5, -0.5]); arc(-0.5, 0.5, 1, 1, -Math.PI / 2, 0, 40); break;
+    case 'pie': { const a = p && p.a || 0.9; P.push([0, 0]); arc(0, 0, 0.5, 0.5, a / 2, TAU - a / 2, 80); break; }
+    case 'key': arc(0, -0.15, 0.35, 0.35, Math.PI * 0.75, Math.PI * 2.25, 60); P.push([0.25, 0.5], [-0.25, 0.5]); break;
     default: arc(0, 0, 0.5, 0.5, -Math.PI / 2, 1.5 * Math.PI, 120);
+  }
+  if (nrm) {   // fit the unit box
+    let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+    for (const v of P) { x0 = Math.min(x0, v[0]); x1 = Math.max(x1, v[0]); y0 = Math.min(y0, v[1]); y1 = Math.max(y1, v[1]); }
+    for (const v of P) { v[0] = (v[0] - x0) / (x1 - x0 || 1) - 0.5; v[1] = (v[1] - y0) / (y1 - y0 || 1) - 0.5; }
   }
   return P;
 }
@@ -133,71 +174,552 @@ function outline(type, p) {
 }
 
 /* ================= the invention of a monster ================= */
-function pc(type, x, y, w, h, r, z, role, extra) {
-  return Object.assign({ type, x, y, w, h, r: r || 0, z, role, p: null }, extra || {});
+// The machine mixes the grammar of many monsters, never copying one: Mesoamerican and Andean masks, Amazonian
+// feather crowns, Caribbean carnival, rakshasa and kirtimukha faces of India and Sri Lanka, Barong and Rangda,
+// wrathful masks of the Himalaya, oni, hannya and yokai, anime, taotie and opera faces, African and Oceanic
+// masks, gorgons and theatre masks, medieval grotesques, commedia and carnival, skulls, cartoons, robots,
+// aliens, insects, sea creatures, cubism, Miró, Bauhaus, pixels, minimal idols.
+const TH = ['meso', 'andes', 'amazon', 'carib', 'india', 'lanka', 'bali', 'tibet', 'japan', 'anime', 'china', 'africa', 'oceania', 'greek',
+  'medieval', 'carnival', 'skull', 'cartoon', 'robot', 'alien', 'insect', 'sea', 'cubist', 'miro', 'bauhaus', 'pixel', 'minimal'];
+const f3 = v => +v.toFixed(3);
+const wcache = new Map();
+// weighted choice: 'name:weight:tags|...' — options tagged with one of the monster's references are much more likely
+function wp(m, spec) {
+  let o = wcache.get(spec);
+  if (!o) { o = spec.split('|').map(s => { const [n, w, t] = s.split(':'); return [n, +w || 1, t ? t.split(' ') : []]; }); wcache.set(spec, o); }
+  let tot = 0;
+  const ws = o.map(([, w, t]) => { let k = 0; for (const x of t) if (m.th.includes(x)) k++; const v = w * (1 + 6 * k); tot += v; return v; });
+  let r = R() * tot;
+  for (let i = 0; i < o.length; i++) { r -= ws[i]; if (r <= 0) return o[i][0]; }
+  return o[0][0];
 }
 function polyP(n) {
   n = n || 5 + Math.floor(R() * 5);
-  const j = []; for (let i = 0; i < n; i++) j.push(+rnd(0.8, 1.08).toFixed(3));
+  const j = []; for (let i = 0; i < n; i++) j.push(f3(rnd(0.8, 1.08)));
   for (let i = 1; i < n; i++) j[n - i] = j[i];
-  return { n, j, inner: +rnd(0.4, 0.7).toFixed(3) };
+  return { n, j, inner: f3(rnd(0.4, 0.7)) };
 }
-const HEADS = ['ellipse', 'ellipse', 'poly', 'poly', 'shield', 'trid', 'rect', 'diamond', 'almond', 'semi', 'star'];
+const regP = n => ({ n, j: Array(n).fill(1), inner: 0.5 });
+const capP = (w, h) => ({ c: +clamp(0.5 * Math.abs(w) / Math.max(0.001, Math.abs(h)), 0.06, 0.5).toFixed(2) });
+function PP(t) {
+  switch (t) {
+    case 'poly': return polyP();
+    case 'star': return polyP(10 + 2 * Math.floor(R() * 5));
+    case 'blob': return { a: [f3(rnd(0.05, 0.2)), f3(rnd(0.03, 0.14)), f3(rnd(0, 0.08))], f: [f3(R() * 6), f3(R() * 6), f3(R() * 6)] };
+    case 'cloud': return { n: 5 + Math.floor(R() * 6) };
+    case 'gear': return { n: 6 + Math.floor(R() * 7) };
+    case 'horn': return { curl: f3(rnd(0.1, 1)) };
+    case 'trap': return { k: f3(rnd(0.35, 0.75)) };
+    case 'sq': return { e: pick([3, 4, 6]) };
+    case 'step': return { n: pick([2, 3, 3, 4]) };
+    case 'frond': return { n: pick([3, 4, 5]) };
+    case 'spiral': return { t: pick([1.5, 1.75, 2.25]) };
+    case 'snake': return { A: f3(rnd(0.18, 0.34)), k: pick([1.5, 2, 2.5]), f: f3(R() * 6) };
+    case 'crescent': return { T: f3(rnd(0.2, 0.36)), q: f3(rnd(0.2, 0.6)) };
+    default: return null;
+  }
+}
+function pc(type, x, y, w, h, r, z, role, extra) {
+  const q = { type, x, y, w, h, r: r || 0, z, role, p: undefined };
+  if (extra) Object.assign(q, extra);
+  if (q.p === undefined) q.p = PP(type);
+  return q;
+}
+function mk() { const o = {}; Object.defineProperty(o, 'n', { value: 0, writable: true }); return o; }
+const add = (o, q) => (o['i' + o.n++] = q);
+// a mirrored pair
+function S2(o, type, x, y, w, h, r, z, role, ex) {
+  const e = Object.assign({}, ex); if (e.p === undefined) e.p = PP(type);
+  add(o, pc(type, x, y, w, h, r, z, role, Object.assign({}, e, { sgn: 1 })));
+  add(o, pc(type, -x, y, -w, h, -(r || 0), z, role, Object.assign({}, e, { sgn: -1, pv: e.pv ? [-e.pv[0], e.pv[1]] : undefined, ec: e.ec ? [-e.ec[0], e.ec[1]] : undefined })));
+}
+// centre of a piece of length len growing out of the head in direction th (0 = up)
+const radial = (m, th, len, k) => [Math.sin(th) * (m.head.w / 2 * k + len / 2), 0.02 - Math.cos(th) * (m.head.h / 2 * k + len / 2)];
+function dangle(o, x, y, n, s, z, ph) {
+  const ty = pick(['ellipse', 'rect', 'drop', 'diamond', 'tri']);
+  for (let j = 0; j < n; j++) { const last = j === n - 1; add(o, pc(last ? ty : 'ellipse', x, y + (j + 0.5) * s * 1.15, s * (last ? 1.3 : 0.8), s * (last ? 1.5 : 0.8), 0, z, j % 2 ? 'orn2' : 'orn', { sw: 1.4, sf: 1.7, ph: ph || 0, pv: [x, y] })); }
+}
+function tiles(o, cx, cy, w, h, cols, rows, z) {
+  const cw = w / cols, ch = h / rows, s = Math.min(cw, ch), inner = pick(['diamond', 'ellipse', 'tri', 'cross', 'step', 'trid', 'rect']);
+  for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+    const x = cx + (i - (cols - 1) / 2) * cw, y = cy + (j - (rows - 1) / 2) * ch, k = (i + j) % 2;
+    add(o, pc('rect', x, y, cw * 0.94, ch * 0.94, 0, z, k ? 'a0' : 'a1'));
+    if (R() < 0.8) add(o, pc(inner, x, y, s * 0.55, s * 0.55, 0, z + 0.01, k ? 'a1' : 'a2'));
+  }
+}
+// a small second face (gryllus): on the forehead, in the mouth, on top, at the sides
+function mini(o, x, y, s, z, m, role) {
+  add(o, pc(pick(['ellipse', 'sq', 'poly', 'shield', 'trid', 'heart']), x, y, s, s * rnd(1, 1.25), 0, z, role || 'h2'));
+  for (const sg of [-1, 1]) {
+    const ex = x + sg * s * 0.2, ey = y - s * 0.1, ec = [ex, ey];
+    add(o, pc('ellipse', ex, ey, s * 0.24, s * 0.24, 0, z + 0.02, 'ball', { ec, blink: true }));
+    add(o, pc('ellipse', ex, ey, s * 0.1, s * 0.1, 0, z + 0.03, 'black', { ec, blink: true, gaze: s * 0.12 }));
+  }
+  add(o, pc(pick(['rect', 'ellipse', 'bowl', 'semi', 'trid']), x, y + s * 0.28, s * 0.4, s * 0.14, 0, z + 0.02, 'black', { mc: y + s * 0.28 }));
+}
 
+/* ---------- head ---------- */
 function gHead(m) {
-  const o = {}, n = pick([1, 1, 1, 2, 2, 3]);
-  const hw = rnd(0.62, 0.86), hh = rnd(0.78, 1.0);
-  m.head = { w: hw, h: hh };
-  for (let i = 0; i < n; i++) {
-    const t = pick(HEADS), s = i ? rnd(0.55, 0.95) : 1;
-    o['head' + i] = pc(t, i ? rnd(-0.1, 0.1) : 0, 0.02 + (i ? rnd(-0.12, 0.18) : 0), hw * s * (i ? rnd(0.8, 1.2) : 1), hh * s,
-      i ? rnd(-0.3, 0.3) : rnd(-0.04, 0.04), 2 + i * 0.1, 'head' + i, { p: polyP(t === 'star' ? 10 + 2 * Math.floor(R() * 5) : 0) });
-  }
-  if (R() < 0.4) o.jaw = pc(pick(['semi', 'rect', 'trid', 'poly', 'ellipse', 'bowl']), 0, rnd(0.24, 0.36), hw * rnd(0.55, 0.85), rnd(0.22, 0.38), 0, 2.5, 'jaw', { p: polyP() });
-  return o;
-}
-
-function gTop(m) {
-  const o = {}, hw = m.head.w, hh = m.head.h, top = -hh / 2;
-  const t = pick(['none', 'horns', 'horns', 'horns', 'spikes', 'ears', 'ears', 'antennae', 'mane', 'crown']);
-  if (t === 'horns') {
-    const pairs = R() < 0.25 ? 2 : 1;
-    for (let k = 0; k < pairs; k++) {
-      const w = rnd(0.1, 0.22) * (k ? 0.6 : 1), h = rnd(0.25, 0.6) * (k ? 0.6 : 1), x = hw * rnd(0.18, 0.44), r = rnd(0.05, 0.7), curl = +rnd(0.1, 1).toFixed(3), ph = R() * 6;
-      o['hornR' + k] = pc('horn', x, top + 0.06 - h * 0.4, w, h, r, 1 + k * 0.01, 'horn', { p: { curl }, ph, sgn: 1 });
-      o['hornL' + k] = pc('horn', -x, top + 0.06 - h * 0.4, -w, h, -r, 1 + k * 0.01, 'horn', { p: { curl }, ph, sgn: -1 });
-    }
-  } else if (t === 'spikes' || t === 'mane' || t === 'crown') {
-    const n = t === 'mane' ? 15 + 2 * Math.floor(R() * 6) : t === 'crown' ? pick([3, 5, 7]) : 5 + 2 * Math.floor(R() * 4);
-    const spread = t === 'mane' ? rnd(4.2, 5.4) : t === 'crown' ? rnd(0.8, 1.3) : rnd(1.6, 2.6);
-    const w = rnd(0.05, 0.12), h = rnd(0.1, 0.3), type = t === 'crown' ? pick(['rect', 'tri', 'poly']) : 'tri', p = polyP();
+  const o = mk(); m.dark = false; m.fy = 0;
+  const prop = wp(m, 'norm:5|tall:2:africa oceania alien minimal|wide:2:china meso andes sea cartoon|big:1.5:anime cartoon');
+  let hw, hh;
+  if (prop === 'tall') { hw = rnd(0.48, 0.62); hh = rnd(0.98, 1.12); }
+  else if (prop === 'wide') { hw = rnd(0.9, 1.02); hh = rnd(0.64, 0.8); }
+  else if (prop === 'big') { hw = rnd(0.86, 0.98); hh = rnd(0.9, 1.02); }
+  else { hw = rnd(0.62, 0.86); hh = rnd(0.78, 1.0); }
+  let kind = wp(m, 'plain:6|layer:3.5|band:2:africa bauhaus andes|split:2:cubist carnival japan china|quad:1:bauhaus cubist|mosaic:1.3:meso pixel andes|arci:1.2:medieval miro amazon|pixel:1.2:pixel robot|cone:1:andes carnival minimal|grid:1:bauhaus');
+  let t = wp(m, 'ellipse:3|poly:2|shield:1.5:greek medieval|trid:1|rect:1.5:robot meso andes bauhaus|diamond:1|almond:1:africa oceania|semi:1|star:.6:carib|sq:2:meso oceania cartoon japan|trap:1.5:meso andes africa|capsule:1:africa minimal alien|heart:1:africa skull|drop:1:alien sea|blob:1:miro|cloud:.8:cartoon|gear:.5:robot carib|cleft:1:meso|hex:1:insect robot bauhaus|step:.6:meso andes');
+  let fk = { n: 1, tiny: rnd(0.5, 0.65), big: rnd(1.08, 1.2) }[wp(m, 'n:8|tiny:1:minimal cubist cartoon|big:1.2:anime cartoon')];
+  if (kind === 'quad') t = 'ellipse';
+  if (kind === 'split' && t !== 'ellipse' && t !== 'rect') t = R() < 0.7 ? 'ellipse' : 'rect';
+  const T0 = t === 'hex' ? 'poly' : t, P0 = t === 'hex' ? regP(6) : PP(T0);
+  const flip = (T0 === 'trap' && R() < 0.5) || (T0 === 'drop' && R() < 0.7) || (T0 === 'semi' && R() < 0.3) || (T0 === 'step' && R() < 0.3) ? -1 : 1;
+  const H0 = (role, k, z) => pc(T0, 0, 0.02, hw * k, hh * k * flip, 0, z, role, { p: P0 });
+  if (kind === 'cone') {                       // tall hoods with bands: spirits of Tierra del Fuego, carnival hoods
+    hw = rnd(0.5, 0.62); hh = rnd(1.05, 1.2);
+    const ty = pick(['tri', 'capsule', 'almondV', 'drop']), n = 2 + Math.floor(R() * 4);
+    add(o, pc(ty, 0, 0.02, hw, hh, 0, 2, 'hc'));
     for (let i = 0; i < n; i++) {
-      const th = (i / (n - 1) - 0.5) * spread, hh2 = h * (t === 'mane' ? rnd(0.7, 1.2) : 1 + 0.4 * Math.cos(th));
-      const ex = Math.sin(th) * hw / 2, ey = -Math.cos(th) * hh / 2;
-      o['sp' + i] = pc(type, ex + Math.sin(th) * hh2 * 0.35, 0.02 + ey - Math.cos(th) * hh2 * 0.35, w, hh2, th, t === 'mane' ? 0.8 : 1, i % 2 ? 'spike2' : 'spike1', { p, ph: i * 0.55, sgn: 1 });
+      const v = (i + 1) / (n + 1.5), y = 0.02 - hh / 2 + hh * v, wv = ty === 'tri' ? hw * v * 0.92 : hw * 0.8 * Math.sqrt(Math.max(0.08, 1 - Math.pow(2 * v - 1, 2)));
+      add(o, pc('rect', 0, y, wv, rnd(0.03, 0.06), 0, 2.1, i % 2 ? 'h2' : 'h3'));
     }
-  } else if (t === 'ears') {
-    const type = pick(['tri', 'ellipse', 'almond', 'semi', 'poly', 'tri']), w = rnd(0.14, 0.28), h = rnd(0.2, 0.42), x = hw / 2 + w * 0.1, y = rnd(-0.28, 0.05), r = rnd(0.2, 0.8), p = polyP(), ph = R() * 6;
-    o.earR = pc(type, x, y, w, h, r, 1, 'ear', { p, ph, sgn: 1 }); o.earL = pc(type, -x, y, -w, h, -r, 1, 'ear', { p, ph, sgn: -1 });
-    if (R() < 0.5) { o.earRi = pc(type, x, y + h * 0.08, w * 0.5, h * 0.6, r, 1.1, 'earIn', { p, ph, sgn: 1 }); o.earLi = pc(type, -x, y + h * 0.08, -w * 0.5, h * 0.6, -r, 1.1, 'earIn', { p, ph, sgn: -1 }); }
-  } else if (t === 'antennae') {
-    const h = rnd(0.3, 0.5), x = rnd(0.05, 0.2), r = rnd(0.1, 0.5), tr = rnd(0.04, 0.08), ph = R() * 6;
-    for (const s of [1, -1]) {
-      const cx = s * x, cy = top + 0.05 - h / 2;
-      o['ant' + s] = pc('rect', cx, cy, 0.022, h, s * r, 1, 'antStalk', { ph, sgn: s });
-      o['antT' + s] = pc('ellipse', cx + Math.sin(s * r) * h / 2, cy - Math.cos(r) * h / 2, tr * 2, tr * 2, 0, 1.1, 'antTip', { ph, sgn: s });
+    fk = 0.5 / Math.min(1, hw / 0.66); m.fy = hh * 0.1;
+  } else if (kind === 'pixel') {               // a symmetric sprite of squares
+    const cols = pick([5, 7, 7, 9]), rows = cols + pick([0, 1, 2]), cell = Math.min(hw / cols, hh / rows), half = (cols + 1) / 2;
+    hw = cell * cols; hh = cell * rows;
+    for (let j = 0; j < rows; j++) for (let i = 0; i < half; i++) {
+      const dx = i / (half - 0.5), dy = Math.abs((j + 0.5) / rows - 0.5) * 2;
+      if (R() > 1.25 - 0.7 * (dx * dx + dy * dy) - 0.25 * R()) continue;
+      const role = R() < 0.14 ? 'h2' : 'hc', y = 0.02 - hh / 2 + (j + 0.5) * cell;
+      for (const sg of (i ? [-1, 1] : [1])) add(o, pc('rect', sg * i * cell, y, cell * 1.03, cell * 1.03, 0, 2, role));
     }
+  } else if (kind === 'arci') {                // a head made of many things
+    add(o, H0('hc', 0.78, 2));
+    const fam = pick([['ellipse'], ['frond', 'almondV'], ['drop', 'flame'], ['ellipse', 'sq', 'tri', 'diamond', 'crescent'], ['blob'], ['spiral', 'ellipse']]);
+    for (let i = 0, n = 12 + Math.floor(R() * 12); i < n; i++) {
+      const a = R() * TAU, rr = Math.sqrt(rnd(0.25, 1)), s = rnd(0.12, 0.26);
+      add(o, pc(pick(fam), Math.cos(a) * rr * hw * 0.46, 0.02 + Math.sin(a) * rr * hh * 0.46, s, s * rnd(0.8, 1.4), R() * TAU, 2.1 + i * 0.01, pick(['hc', 'h2', 'h3', 'a0', 'a1'])));
+    }
+  } else if (kind === 'grid') {                // a rectangle cut into rectangles
+    hw = rnd(0.7, 0.9); hh = rnd(0.85, 1.0);
+    add(o, pc('rect', 0, 0.02, hw, hh, 0, 2, 'black'));
+    const cells = [[-hw / 2, 0.02 - hh / 2, hw, hh]];
+    for (let i = 0, n = 4 + Math.floor(R() * 5); i < n; i++) {
+      cells.sort((a, b) => b[2] * b[3] - a[2] * a[3]);
+      const [x, y, w, h] = cells.shift(), f = rnd(0.3, 0.7);
+      if (w > h) cells.push([x, y, w * f, h], [x + w * f, y, w * (1 - f), h]); else cells.push([x, y, w, h * f], [x, y + h * f, w, h * (1 - f)]);
+    }
+    for (const [x, y, w, h] of cells) add(o, pc('rect', x + w / 2, y + h / 2, Math.max(0.01, w - 0.014), Math.max(0.01, h - 0.014), 0, 2.1, pick(['white', 'white', 'hc', 'a0', 'a1', 'a2'])));
+    m.dark = true;
+  } else {
+    add(o, H0('hc', 1, 2));
+    if (kind === 'layer') for (let i = 1, n = pick([1, 1, 2, 3]); i <= n; i++) {
+      const s = rnd(0.5, 0.95);
+      add(o, pc(pick(['ellipse', 'poly', 'shield', 'trid', 'rect', 'diamond', 'almond', 'semi', 'star', 'sq', 'trap', 'blob', 'heart', 'crescent', 'cloud']), rnd(-0.1, 0.1), 0.02 + rnd(-0.12, 0.18), hw * s * rnd(0.8, 1.2), hh * s, rnd(-0.3, 0.3), 2 + i * 0.1, i % 2 ? 'h2' : 'h3'));
+    }
+    if (kind === 'band') for (let i = 1, n = pick([2, 3, 4]); i <= n; i++) add(o, H0(i % 2 ? 'h2' : (R() < 0.5 ? 'hc' : 'h3'), 1 - i * (0.72 / (n + 0.6)), 2 + i * 0.05));
+    if (kind === 'split') {
+      const lr = R() < 0.6;
+      if (T0 === 'ellipse') add(o, lr ? pc('semi', hw / 4, 0.02, hh, hw / 2, Math.PI / 2, 2.1, 'h2') : pc('semi', 0, 0.02 - hh / 4, hw, hh / 2, 0, 2.1, 'h2'));
+      else add(o, lr ? pc('rect', hw / 4, 0.02, hw / 2, hh, 0, 2.1, 'h2') : pc('rect', 0, 0.02 - hh / 4, hw, hh / 2, 0, 2.1, 'h2'));
+    }
+    if (kind === 'quad') {
+      add(o, pc('quarter', hw / 4, 0.02 - hh / 4, hw / 2, hh / 2, 0, 2.1, 'h2'));
+      add(o, pc('quarter', -hw / 4, 0.02 + hh / 4, -hw / 2, -hh / 2, 0, 2.1, 'h3'));
+      if (R() < 0.5) add(o, pc('quarter', hw / 4, 0.02 + hh / 4, hw / 2, -hh / 2, 0, 2.1, pick(['h3', 'a0'])));
+    }
+    if (kind === 'mosaic') {
+      const cols = pick([4, 5, 6]), rows = pick([5, 6, 7]), cw = hw * 0.62 / cols, ch = hh * 0.66 / rows, ty = pick(['rect', 'rect', 'diamond', 'ellipse', 'tri', 'sq']), roles = {};
+      for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+        const key = Math.abs(i - (cols - 1) / 2) + '_' + j; roles[key] = roles[key] || pick(['a0', 'a1', 'a2', 'h2', 'hc']);
+        add(o, pc(ty, (i - (cols - 1) / 2) * cw, 0.02 + (j - (rows - 1) / 2) * ch, cw * 0.84, ch * 0.84, 0, 2.2, roles[key]));
+      }
+    }
+    if ((kind === 'plain' || kind === 'layer') && R() < 0.35) add(o, pc(pick(['semi', 'rect', 'trid', 'poly', 'ellipse', 'bowl', 'sq', 'trap']), 0, rnd(0.24, 0.36), hw * rnd(0.55, 0.85), rnd(0.22, 0.38), 0, 2.5, 'h2', { jw: 1 }));
+  }
+  m.head = { w: hw, h: hh, top: 0.02 - hh / 2, bot: 0.02 + hh / 2 };
+  m.fk = fk * Math.min(1, hw / 0.66);
+  return o;
+}
+
+/* ---------- behind the head: haloes, rays, flames, feathers ---------- */
+function gBack(m) {
+  const o = mk(), { w: hw, h: hh, top } = m.head, Rm = Math.max(hw, hh);
+  const t = wp(m, 'none:7|halo:2:india lanka bali tibet medieval|rays:2:andes meso amazon|flames:1.5:tibet japan bali india|feathers:2:amazon meso carib|tumi:1.5:andes|cobra:1.2:india lanka|mane:1.2:greek medieval china carib|spider:.7:miro insect|emanata:.8:cartoon anime|frill:1:sea cartoon carib|shape:1:bauhaus africa miro');
+  switch (t) {
+    case 'halo': {
+      const d = Rm * rnd(1.25, 1.6), ty = pick(['ellipse', 'ellipse', 'sq', 'poly', 'cloud', 'star', 'gear']), p = ty === 'poly' ? regP(pick([6, 8, 10])) : PP(ty), cy = 0.02 - rnd(0, 0.08), spin = ['star', 'gear', 'cloud'].includes(ty) ? rnd(-0.15, 0.15) : 0;
+      add(o, pc(ty, 0, cy, d, d, 0, 0.3, 'halo', { p, spin }));
+      if (R() < 0.6) add(o, pc(ty, 0, cy, d * 0.86, d * 0.86, 0, 0.32, 'halo2', { p, spin }));
+      if (R() < 0.6) {
+        const n = 10 + 2 * Math.floor(R() * 8), ty2 = pick(['ellipse', 'drop', 'tri', 'diamond', 'flame']), s = d * rnd(0.06, 0.1), orb = R() < 0.6 ? rnd(-0.2, 0.2) : 0;
+        for (let i = 0; i < n; i++) { const a = i / n * TAU; add(o, pc(ty2, Math.sin(a) * d * 0.5, cy - Math.cos(a) * d * 0.5, s, s * (ty2 === 'ellipse' ? 1 : 1.8), a, 0.34, i % 2 ? 'a0' : 'a1', { pv: [0, cy], orb })); }
+      }
+      break;
+    }
+    case 'rays': {
+      const n = 12 + 2 * Math.floor(R() * 7), full = R() < 0.6, sty = pick(['tri', 'alt', 'disc', 'rect', 'snake']), L = rnd(0.2, 0.36), a0 = full ? 0 : -2.1, a1 = full ? TAU * (n - 1) / n : 2.1, ps = PP('snake');
+      for (let i = 0; i < n; i++) {
+        const th = a0 + (a1 - a0) * i / (n - 1), wavy = sty === 'snake' || (sty === 'alt' && i % 2), ty = wavy ? 'snake' : sty === 'rect' || sty === 'disc' ? 'rect' : 'tri', len = L * (i % 2 ? 1 : rnd(0.75, 0.9)), [x, y] = radial(m, th, len, 0.85), A = { sw: 0.5, ph: i * 0.7, pv: radial(m, th, 0, 0.85) };
+        add(o, pc(ty, x, y, ty === 'rect' ? 0.022 : wavy ? 0.16 : 0.08, len, th, 0.5, i % 2 ? 'a0' : 'a1', Object.assign({ p: wavy ? ps : null }, A)));
+        if (sty === 'disc') { const [tx, ty2] = radial(m, th, len * 2, 0.85); add(o, pc('ellipse', tx, ty2, 0.06, 0.06, 0, 0.52, 'a2', A)); }
+      }
+      break;
+    }
+    case 'flames': case 'feathers': case 'mane': {
+      const fl = t === 'flames', mn = t === 'mane', n = mn ? 18 + 2 * Math.floor(R() * 8) : 9 + 2 * Math.floor(R() * 5), spread = mn ? Math.PI * (n - 1) / n : rnd(1.5, 2.6);
+      const ty = fl ? 'flame' : mn ? pick(['tri', 'drop', 'flame', 'almondV']) : pick(['almondV', 'capsule', 'drop', 'frond', 'tri']), p = PP(ty), L = mn ? rnd(0.12, 0.22) : rnd(0.24, 0.42), rows = !mn && R() < 0.4 ? 2 : 1;
+      for (let k = 0; k < rows; k++) for (let i = 0; i < n; i++) {
+        const th = -spread + 2 * spread * i / (n - 1) + (k ? spread / (n - 1) : 0), len = L * (k ? 1.35 : 1) * (mn ? rnd(0.8, 1.2) : 1 + 0.25 * Math.cos(th)), [x, y] = radial(m, th, len, 0.85), wd = len * (ty === 'flame' ? 0.45 : ty === 'frond' ? 0.5 : 0.32);
+        add(o, pc(ty, x, y, wd * (ty === 'flame' && i % 2 ? -1 : 1), ty === 'drop' ? -len : len, th, 0.6 - k * 0.1, k ? 'a2' : i % 2 ? 'a0' : 'a1', { p, sw: fl ? 1.5 : 0.7, ph: i * 0.6 + k, pv: radial(m, th, 0, 0.85) }));
+      }
+      break;
+    }
+    case 'tumi': {
+      const wd = hw * rnd(1.35, 1.9), ht = rnd(0.4, 0.6);
+      if (R() < 0.5) add(o, pc('crescent', 0, top + 0.1 - ht / 2, wd, ht, 0, 0.5, 'halo'));
+      else { add(o, pc('semi', 0, top + 0.14 - ht / 2, wd, ht, 0, 0.5, 'halo')); if (R() < 0.6) add(o, pc('semi', 0, top + 0.14 - ht * 0.35, wd * 0.7, ht * 0.7, 0, 0.52, 'halo2')); }
+      if (R() < 0.6) for (const sg of [-1, 1]) dangle(o, sg * wd * 0.44, top + 0.12, pick([2, 3]), 0.06, 0.55, sg);
+      break;
+    }
+    case 'cobra': {
+      const n = pick([3, 5, 5, 7, 9]), spread = rnd(0.7, 1.2), L = rnd(0.3, 0.42);
+      for (let i = 0; i < n; i++) {
+        const th = -spread + 2 * spread * i / (n - 1), len = L * (1 + 0.3 * Math.cos(th * 1.5)), [x, y] = radial(m, th, len, 0.8), A = { sw: 0.8, ph: i * 0.9, pv: radial(m, th, 0, 0.8) };
+        add(o, pc('drop', x, y, len * 0.5, -len, th, 0.6, i % 2 ? 'a0' : 'top', A));
+        const [hx, hy] = radial(m, th, len * 1.5, 0.8), c = Math.cos(th), s = Math.sin(th);
+        for (const sg of [-1, 1]) add(o, pc('ellipse', hx + sg * c * len * 0.1, hy + sg * s * len * 0.1, 0.03, 0.03, 0, 0.62, 'black', A));
+      }
+      break;
+    }
+    case 'spider':
+      for (let i = 0; i < 4; i++) { const span = rnd(0.3, 0.5) + i * 0.06; S2(o, 'crescent', hw * 0.4 + span / 2, 0.02 + (i - 1.5) * 0.16, span, -rnd(0.2, 0.4), (i - 1.5) * 0.35, 0.5, 'top', { p: { T: 0.07, q: 0.2, fl: 1 }, sw: 0.8, ph: i }); }
+      break;
+    case 'emanata': {
+      const n = 8 + Math.floor(R() * 8), ty = pick(['rect', 'rect', 'drop', 'bolt', 'tri']);
+      for (let i = 0; i < n; i++) { const th = -2.2 + 4.4 * i / (n - 1), len = rnd(0.08, 0.16), [x, y] = radial(m, th, len, 1.25); add(o, pc(ty, x, y, ty === 'rect' ? 0.02 : len * 0.5, len, th, 0.5, i % 2 ? 'a0' : 'a1', { pul: 0.25, ph: i })); }
+      break;
+    }
+    case 'frill': {
+      const ty = pick(['cloud', 'star', 'gear', 'poly']), p = ty === 'star' ? polyP(16 + 2 * Math.floor(R() * 9)) : ty === 'cloud' ? { n: 9 + Math.floor(R() * 8) } : PP(ty), d = Rm * rnd(1.3, 1.55), spin = R() < 0.6 ? rnd(-0.12, 0.12) : 0;
+      add(o, pc(ty, 0, 0.02, d, d, 0, 0.4, 'halo', { p, spin }));
+      if (R() < 0.4) add(o, pc(ty, 0, 0.02, d * 0.8, d * 0.8, 0.2, 0.42, 'halo2', { p, spin: -spin }));
+      break;
+    }
+    case 'shape':
+      for (let i = 0, n = pick([1, 1, 2]); i < n; i++) add(o, pc(pick(['ellipse', 'rect', 'tri', 'diamond', 'blob', 'semi', 'crescent', 'cross']), rnd(-0.3, 0.3), 0.02 + rnd(-0.3, 0.2), Rm * rnd(0.8, 1.4), Rm * rnd(0.8, 1.4), pick([0, 0, Math.PI / 4, rnd(-0.5, 0.5)]), 0.3 + i * 0.02, i ? 'halo2' : 'halo'));
+      break;
   }
   return o;
 }
 
+/* ---------- at the sides: ears, panels, spools, fins ---------- */
+function gSide(m) {
+  const o = mk(), { w: hw } = m.head;
+  switch (wp(m, 'none:3|ears:4|long:1.2:oceania india africa|panels:1.5:lanka bali india|spools:2:meso andes amazon|fins:1.5:sea|ram:1.2:greek medieval|wings:1:greek|tufts:1:carnival cartoon|flaps:.8:robot japan|pend:1:africa carnival india')) {
+    case 'ears': {
+      const ty = pick(['tri', 'ellipse', 'almond', 'semi', 'poly', 'tri', 'drop', 'flame', 'frond', 'crescent', 'sq']), w = rnd(0.14, 0.3), h = rnd(0.2, 0.44), x = hw / 2 + w * 0.1, y = rnd(-0.28, 0.08), r = rnd(0.2, 0.9), A = { p: PP(ty), ph: R() * 6, sw: 1 };
+      S2(o, ty, x, y, w, h, r, 1, 'top', A); if (R() < 0.5) S2(o, ty, x, y + h * 0.06, w * 0.5, h * 0.58, r, 1.1, 'earIn', A);
+      break;
+    }
+    case 'long': {
+      const h = rnd(0.35, 0.55), w = rnd(0.1, 0.16), x = hw / 2 + w * 0.2, y = 0.02 + h * 0.2;
+      S2(o, 'capsule', x, y, w, h, 0, 1, 'top'); S2(o, 'capsule', x, y + h * 0.15, w * 0.4, h * 0.5, 0, 1.1, 'earIn');
+      if (R() < 0.5) for (const sg of [-1, 1]) dangle(o, sg * x, y + h / 2, 2, 0.05, 1.2, sg);
+      break;
+    }
+    case 'panels': {
+      const ty = pick(['flame', 'drop', 'semi', 'frond', 'almondV', 'sq', 'crescent']), w = rnd(0.3, 0.45), h = rnd(0.5, 0.75), x = hw / 2 + w * 0.3, y = rnd(-0.15, 0.05), r = rnd(0.1, 0.5), A = { p: PP(ty), sw: 0.5, ph: R() * 6 };
+      S2(o, ty, x, y, w, h, r, 0.9, 'top', A); S2(o, ty, x, y, w * 0.66, h * 0.66, r, 0.92, 'earIn', A);
+      if (R() < 0.7) S2(o, R() < 0.5 ? ty : 'ellipse', x, y, w * 0.3, h * 0.3, r, 0.94, 'a0', A);
+      break;
+    }
+    case 'spools': {
+      const d = rnd(0.14, 0.22), x = hw / 2 + d * 0.15, y = rnd(0.02, 0.16), ty = pick(['ellipse', 'ellipse', 'sq', 'poly', 'gear']);
+      S2(o, ty, x, y, d, d, 0, 3.2, 'orn', { p: ty === 'poly' ? regP(6) : PP(ty) }); S2(o, 'ellipse', x, y, d * 0.55, d * 0.55, 0, 3.3, 'orn2');
+      if (R() < 0.5) S2(o, 'ellipse', x, y, d * 0.2, d * 0.2, 0, 3.4, 'black');
+      if (R() < 0.5) for (const sg of [-1, 1]) dangle(o, sg * x, y + d / 2, pick([2, 3]), d * 0.35, 3.1, sg);
+      break;
+    }
+    case 'fins': {
+      const n = pick([2, 3, 4]), ty = pick(['tri', 'crescent', 'almondV', 'flame']), p = PP(ty);
+      for (let i = 0; i < n; i++) { const w = rnd(0.12, 0.2); S2(o, ty, hw / 2 + w * 0.3, -0.15 + i * 0.14, w * 0.6, w * 1.4, Math.PI / 2 + rnd(-0.3, 0.3), 1, i % 2 ? 'top2' : 'top', { p, sw: 1, ph: i }); }
+      break;
+    }
+    case 'ram': { const d = rnd(0.26, 0.4); S2(o, 'spiral', hw / 2 + d * 0.15, rnd(-0.25, -0.05), d, d, 0, 2.95, 'top', { pul: 0.04 }); break; }
+    case 'wings': {
+      const n = pick([3, 4, 5]), ty = pick(['almondV', 'capsule', 'drop']), L = rnd(0.25, 0.4);
+      for (let i = 0; i < n; i++) { const a = 0.5 + i * 0.32; S2(o, ty, hw * 0.42 + Math.sin(a) * L * 0.5, -0.2 - Math.cos(a) * L * 0.5, L * 0.3, L * (1 - i * 0.12), a, 1 - i * 0.01, i % 2 ? 'top2' : 'top', { sw: 0.8, ph: i * 0.5, pv: [hw * 0.42, -0.2] }); }
+      break;
+    }
+    case 'tufts': { const d = rnd(0.24, 0.38); S2(o, pick(['cloud', 'cloud', 'star', 'blob']), hw / 2 + d * 0.2, rnd(-0.3, -0.1), d, d, 0, 1, 'top', { pul: 0.05 }); break; }
+    case 'flaps': {
+      const w = rnd(0.1, 0.18), h = rnd(0.25, 0.4);
+      S2(o, pick(['rect', 'trap', 'sq']), hw / 2 + w * 0.3, rnd(-0.05, 0.1), w, h, rnd(0, 0.3), 1, 'top'); if (R() < 0.5) S2(o, 'ellipse', hw / 2 + w * 0.3, 0.02, w * 0.5, w * 0.5, 0, 1.1, 'orn');
+      break;
+    }
+    case 'pend': S2(o, 'ellipse', hw / 2, 0.08, 0.08, 0.1, 0, 1, 'top'); for (const sg of [-1, 1]) dangle(o, sg * (hw / 2 + 0.01), 0.12, pick([2, 3, 4]), 0.055, 1.2, sg); break;
+  }
+  return o;
+}
+
+/* ---------- on top: horns, hair, crowns, hats ---------- */
+function gTop(m) {
+  const o = mk(), { w: hw, h: hh, top } = m.head, a = (...q) => add(o, pc(...q));
+  switch (wp(m, 'none:3|horns:5:japan medieval greek carnival|spikes:2.5:sea greek|antennae:1.5:insect alien robot cartoon|bull:2:greek andes africa|many:1.5:carib andes medieval|antlers:1.2:medieval china|unicorn:.8:medieval|snakes:2:greek india lanka|hair:2:anime cartoon|bangs:1.5:anime|flamehair:1.5:japan tibet bali|plank:1.2:africa|hat:2.5:carnival medieval cartoon andes|kabuto:1.2:japan|tiara:1.8:india bali lanka meso|topknot:1:japan china oceania|leaves:1.2:medieval amazon|catears:1.5:anime japan|pukao:.6:oceania|cap:.8:meso|dish:.5:japan|face:.6:medieval oceania')) {
+    case 'horns': {
+      const pairs = R() < 0.3 ? 2 : 1, ty = pick(['horn', 'horn', 'horn', 'tri', 'flame']);
+      for (let k = 0; k < pairs; k++) { const w = rnd(0.1, 0.22) * (k ? 0.6 : 1), h = rnd(0.25, 0.6) * (k ? 0.6 : 1); S2(o, ty, hw * rnd(0.18, 0.44), top + 0.06 - h * 0.4, w, h, rnd(0.05, 0.7), 1 + k * 0.01, k ? 'top2' : 'top', { ph: R() * 6, sw: 1 }); }
+      break;
+    }
+    case 'spikes': {
+      const n = 5 + 2 * Math.floor(R() * 6), spread = pick([rnd(0.8, 1.3), rnd(1.6, 2.6), rnd(4.2, 5.4)]), ty = pick(['tri', 'tri', 'rect', 'capsule', 'almondV', 'drop', 'poly']), p = PP(ty), w = rnd(0.05, 0.12), h = rnd(0.1, 0.3);
+      for (let i = 0; i < n; i++) { const th = (i / (n - 1) - 0.5) * spread, len = h * (1 + 0.4 * Math.cos(th)), [x, y] = radial(m, th, len * 0.7, 1); a(ty, x, y, w, len, th, 1, i % 2 ? 'top2' : 'top', { p, ph: i * 0.55, sw: 1 }); }
+      break;
+    }
+    case 'antennae': {
+      const h = rnd(0.3, 0.5), x = rnd(0.05, 0.2), r = rnd(0.1, 0.5), tr = rnd(0.04, 0.08), ph = R() * 6, tip = pick(['ellipse', 'ellipse', 'star', 'diamond', 'drop']), tp = PP(tip);
+      for (const s of [1, -1]) {
+        const cx = s * x, cy = top + 0.05 - h / 2, A = { ph, sgn: s, sw: 1, pv: [cx - Math.sin(s * r) * h / 2, cy + Math.cos(r) * h / 2] };
+        a('rect', cx, cy, 0.022, h, s * r, 1, 'top2', A); a(tip, cx + Math.sin(s * r) * h / 2, cy - Math.cos(r) * h / 2, tr * 2, tr * 2, 0, 1.1, 'top', Object.assign({ p: tp }, A));
+      }
+      break;
+    }
+    case 'bull': {
+      const w = hw * rnd(1.1, 1.7), h = rnd(0.3, 0.5);
+      a('crescent', 0, top + 0.1 - h / 2, w, h, 0, 1, 'top', { p: { T: f3(rnd(0.2, 0.34)), q: f3(rnd(0.3, 0.7)) } });
+      if (R() < 0.3) S2(o, 'ellipse', w * 0.44, top + 0.1 - h, 0.06, 0.06, 0, 1.1, 'top2');
+      break;
+    }
+    case 'many': {
+      const full = m.th.includes('carib') || R() < 0.3, n = full ? 10 + Math.floor(R() * 8) : 5 + Math.floor(R() * 5), ty = pick(['horn', 'tri', 'flame']);
+      for (let i = 0; i < n; i++) {
+        const th = full ? i / n * TAU : -1.4 + 2.8 * i / (n - 1), len = rnd(0.14, 0.42), [x, y] = radial(m, th, len * 0.8, 0.95), sg = Math.sin(th) < 0 ? -1 : 1;
+        a(ty, x, y, sg * len * rnd(0.3, 0.45), len, th * 0.8, 1, pick(['top', 'top', 'top2', 'a0']), { p: ty === 'horn' ? { curl: f3(rnd(0.2, 1)) } : null, ph: i, sw: 0.8, sgn: sg });
+      }
+      break;
+    }
+    case 'antlers': {
+      const L = rnd(0.35, 0.5), an = rnd(0.3, 0.7), bx = hw * 0.25, by = top + 0.05, tw = 0.035, nt = pick([2, 3]);
+      S2(o, 'capsule', bx + Math.sin(an) * L / 2, by - Math.cos(an) * L / 2, tw, L, an, 1, 'top');
+      for (let j = 1; j <= nt; j++) { const u = j / 3.5, px = bx + Math.sin(an) * L * u, py = by - Math.cos(an) * L * u, l2 = L * rnd(0.3, 0.5), a2 = an - rnd(0.6, 1.1) * (j % 2 ? 1 : -0.6); S2(o, 'capsule', px + Math.sin(a2) * l2 / 2, py - Math.cos(a2) * l2 / 2, tw * 0.9, l2, a2, 1, 'top'); }
+      break;
+    }
+    case 'unicorn': { const h = rnd(0.35, 0.6); a(pick(['tri', 'horn', 'flame']), 0, top + 0.06 - h / 2, rnd(0.08, 0.14), h, 0, 1, 'top', { sw: 0.5 }); if (R() < 0.5) a('ellipse', 0, top + 0.04, 0.16, 0.08, 0, 1.1, 'top2'); break; }
+    case 'snakes': {
+      const n = 7 + 2 * Math.floor(R() * 4), spread = rnd(1.3, 2.2);
+      for (let i = 0; i < n; i++) { const th = -spread + 2 * spread * i / (n - 1), len = rnd(0.3, 0.5), [x, y] = radial(m, th, len, 0.85); a('snake', x, y, len * 0.6 * (i % 2 ? -1 : 1), len, th, 1, i % 2 ? 'top2' : 'top', { sw: 1.6, sf: rnd(0.8, 1.6), ph: i * 1.3, pv: radial(m, th, 0, 0.85) }); }
+      break;
+    }
+    case 'hair': {
+      const n = 5 + Math.floor(R() * 5), spread = rnd(1.0, 1.8);
+      a('semi', 0, top + hh * 0.12, hw * 1.04, hh * 0.3, 0, 0.9, 'top');
+      for (let i = 0; i < n; i++) { const th = -spread + 2 * spread * i / (n - 1) + rnd(-0.12, 0.12), len = rnd(0.2, 0.48), [x, y] = radial(m, th, len * 0.7, 0.9); a(pick(['tri', 'tri', 'flame']), x, y, rnd(0.16, 0.3) * (R() < 0.5 ? -1 : 1), len, th + rnd(-0.3, 0.3), 1, 'top', { sw: 0.4, ph: i }); }
+      if (R() < 0.35) a('crescent', rnd(-0.05, 0.05), top - 0.12, 0.2, 0.25, rnd(0.8, 1.6), 1.05, 'top', { p: { T: 0.1, q: 0.2 }, sw: 2 });
+      break;
+    }
+    case 'bangs': {
+      const n = 4 + Math.floor(R() * 4), len = rnd(0.12, 0.24);
+      a('semi', 0, top + hh * 0.1, hw * 1.06, hh * 0.3, 0, 0.9, 'top');
+      for (let i = 0; i < n; i++) a('trid', (i - (n - 1) / 2) * hw * 0.8 / n, top + len * rnd(0.3, 0.5), hw * 0.9 / n, len * rnd(0.8, 1.2), rnd(-0.15, 0.15), 4.8, 'top');
+      if (R() < 0.6) S2(o, 'capsule', hw / 2 + 0.02, 0.02 + rnd(0, 0.2), rnd(0.08, 0.14), rnd(0.5, 0.8), rnd(-0.1, 0.1), 0.95, 'top', { sw: 0.4 });
+      break;
+    }
+    case 'flamehair': {
+      const n = 7 + 2 * Math.floor(R() * 3), spread = rnd(0.9, 1.5);
+      for (let i = 0; i < n; i++) { const th = -spread + 2 * spread * i / (n - 1), len = rnd(0.25, 0.45) * (1 + 0.3 * Math.cos(th)), [x, y] = radial(m, th, len * 0.8, 0.9); a('flame', x, y, len * 0.45 * (i % 2 ? -1 : 1), len, th, 1, i % 2 ? 'top2' : 'top', { sw: 1.5, ph: i * 0.7, pv: radial(m, th, 0, 0.9) }); }
+      break;
+    }
+    case 'plank': {                              // tall painted boards above the face
+      const w = hw * rnd(0.4, 0.62), h = rnd(0.45, 0.8), y = top + 0.05 - h / 2, n = pick([3, 4, 5]), cs = Math.min(w * 0.7, h / n * 0.8), ty = pick(['diamond', 'tri', 'ellipse', 'cross', 'rect', 'trid', 'step']);
+      a(pick(['rect', 'rect', 'trap', 'capsule', 'almondV']), 0, y, w, h, 0, 1, 'top');
+      for (let i = 0; i < n; i++) a(R() < 0.75 ? ty : 'ellipse', 0, y - h / 2 + (i + 0.5) * h / n, cs, cs, 0, 1.1, i % 2 ? 'a0' : 'a1');
+      if (R() < 0.5) a('crescent', 0, y - h / 2 - 0.06, w * 1.3, 0.2, 0, 1.05, 'top2');
+      break;
+    }
+    case 'hat': {
+      const b = top + 0.07;
+      switch (wp(m, 'cone:2:carnival andes|top:1.5:cartoon|funnel:1:medieval|jester:1.5:carnival|four:1.2:andes|brim:1:medieval carnival')) {
+        case 'cone': {
+          const h = rnd(0.4, 0.75), w = hw * rnd(0.5, 0.8), n = pick([0, 2, 3]);
+          a('tri', 0, b - h / 2, w, h, 0, 4.8, 'top');
+          for (let i = 1; i <= n; i++) { const v = i / (n + 1); a('rect', 0, b - h * v, w * (1 - v) * 0.98, h * 0.07, 0, 4.85, 'top2'); }
+          if (R() < 0.5) a(pick(['ellipse', 'star']), 0, b - h, 0.09, 0.09, 0, 4.9, 'a0', { pul: 0.1 });
+          break;
+        }
+        case 'top': { const h = rnd(0.3, 0.5), w = hw * rnd(0.45, 0.65); a('trap', 0, b - h / 2, w, R() < 0.5 ? h : -h, 0, 4.8, 'top', { p: { k: 0.8 } }); a('rect', 0, b, w * 1.6, 0.045, 0, 4.85, 'top'); a('rect', 0, b - 0.07, w * 0.95, 0.06, 0, 4.85, 'top2'); break; }
+        case 'funnel': a('trap', 0, b - 0.18, hw * 0.7, 0.36, 0, 4.8, 'top', { p: { k: 0.3 } }); a('rect', 0, b - 0.44, 0.05, 0.16, 0, 4.8, 'top'); break;
+        case 'jester':
+          for (let i = 0, n = pick([2, 3]); i < n; i++) {
+            const th = n === 2 ? (i ? 0.9 : -0.9) : (i - 1) * 1.0, len = rnd(0.35, 0.5), sg = th < 0 ? -1 : 1, [x, y] = radial(m, th, len * 0.8, 0.8);
+            a('horn', x, y, sg * len * 0.45, len, th * 0.6, 4.8, i % 2 ? 'top2' : 'top', { p: { curl: 0.9 } }); a('ellipse', x + sg * len * 0.2, y - len * 0.5, 0.07, 0.07, 0, 4.9, 'a0', { pul: 0.12, ph: i });
+          }
+          break;
+        case 'four': {                           // four-cornered hats with tiles
+          const h = rnd(0.2, 0.3), w = hw * rnd(0.7, 0.95);
+          a('trap', 0, b - h / 2, w, h, 0, 4.8, 'top', { p: { k: 0.85 } });
+          for (const sg of [-1, -0.33, 0.33, 1]) a('tri', sg * w * 0.38, b - h - 0.05, 0.08, 0.12, 0, 4.8, 'top2');
+          tiles(o, 0, b - h / 2, w * 0.8, h * 0.6, pick([4, 5, 6]), 1, 4.85);
+          break;
+        }
+        default: a('sq', 0, b, hw * 1.5, 0.07, 0, 4.85, 'top'); a('semi', 0, b - 0.14, hw * 0.75, 0.28, 0, 4.8, 'top'); a('rect', 0, b - 0.05, hw * 0.74, 0.05, 0, 4.86, 'top2');
+      }
+      break;
+    }
+    case 'kabuto': {
+      const h = hh * rnd(0.4, 0.5);
+      a('semi', 0, top + h / 2 - 0.04, hw * 1.08, h, 0, 4.7, 'top'); a('rect', 0, top + h - 0.05, hw * 1.12, 0.05, 0, 4.75, 'top2');
+      if (R() < 0.6) S2(o, pick(['horn', 'flame', 'tri']), hw * 0.22, top - 0.2, 0.12, 0.45, 0.35, 4.6, 'orn', { p: { curl: 0.8 } }); else a('crescent', 0, top - 0.12, hw * 0.8, 0.3, 0, 4.6, 'orn');
+      S2(o, pick(['trap', 'rect', 'semi']), hw / 2 + 0.06, top + h + 0.08, 0.16, 0.24, 0.5, 4.65, 'top2');
+      if (R() < 0.5) a(pick(['ellipse', 'star', 'diamond']), 0, top + h * 0.45, 0.1, 0.1, 0, 4.8, 'orn');
+      break;
+    }
+    case 'tiara': {                              // tiered crowns
+      const n = pick([2, 3, 4]), ty = pick(['trap', 'semi', 'step', 'rect', 'sq']); let y = top + 0.08, w = hw * rnd(0.7, 1.0);
+      for (let i = 0; i < n; i++) {
+        const h = rnd(0.1, 0.17);
+        a(ty, 0, y - h / 2, w, h, 0, 4.7 + i * 0.01, i % 2 ? 'top2' : 'top', ty === 'trap' ? { p: { k: 0.7 } } : null);
+        if (R() < 0.6) { const k = pick([3, 5, 7]); for (let j = 0; j < k; j++) a('ellipse', (j - (k - 1) / 2) * w * 0.8 / k, y - h / 2, 0.035, 0.035, 0, 4.8, 'a0'); }
+        y -= h * 0.92; w *= rnd(0.6, 0.8);
+      }
+      a(pick(['drop', 'tri', 'flame', 'ellipse', 'almondV']), 0, y - 0.08, 0.08, 0.2, 0, 4.7, 'orn');
+      if (R() < 0.6) S2(o, pick(['flame', 'drop', 'frond', 'horn']), hw * 0.5, top + 0.02, 0.16, 0.34, rnd(0.3, 0.9), 4.65, 'orn', { sw: 0.5 });
+      break;
+    }
+    case 'topknot': {
+      const d = rnd(0.16, 0.3);
+      a(pick(['ellipse', 'sq', 'cloud', 'drop']), 0, top - d * 0.35, d, d * rnd(0.8, 1.3), 0, 1, 'top'); a('rect', 0, top + 0.01, d * 0.6, 0.04, 0, 1.1, 'top2');
+      if (R() < 0.3) a('rect', 0, top - d * 0.4, d * 1.8, 0.02, rnd(-0.4, 0.4), 0.95, 'orn');
+      break;
+    }
+    case 'leaves': {
+      const n = 9 + 2 * Math.floor(R() * 4), spread = rnd(1.6, 2.4), ty = pick(['frond', 'almondV', 'frond']), p = PP(ty);
+      for (let i = 0; i < n; i++) { const th = -spread + 2 * spread * i / (n - 1), len = rnd(0.2, 0.36), [x, y] = radial(m, th, len * 0.7, 0.9); a(ty, x, y, len * 0.5, len, th + rnd(-0.3, 0.3), 1, i % 2 ? 'top2' : 'top', { p, sw: 0.7, ph: i }); }
+      break;
+    }
+    case 'catears': {
+      const w = rnd(0.22, 0.32), h = rnd(0.25, 0.38), x = hw * 0.3, y = top + 0.05 - h * 0.3, r = rnd(0.15, 0.4);
+      S2(o, 'tri', x, y, w, h, r, 1, 'top', { sw: 0.6 }); S2(o, 'tri', x, y + h * 0.1, w * 0.5, h * 0.55, r, 1.1, 'earIn', { sw: 0.6 });
+      break;
+    }
+    case 'pukao': { const w = hw * rnd(0.4, 0.6), h = rnd(0.16, 0.26); a(pick(['rect', 'sq', 'trap']), 0, top + 0.05 - h / 2, w, h, 0, 1, 'top'); a('sq', 0, top + 0.02 - h, w * 0.4, 0.07, 0, 1, 'top'); break; }
+    case 'cap': {
+      const h = hh * rnd(0.3, 0.42);
+      a('semi', 0, top + h / 2 - 0.03, hw * 1.06, h, 0, 4.7, 'top'); a('rect', 0, top + h - 0.05, hw * 1.02, 0.05, 0, 4.75, 'top2');
+      if (R() < 0.6) S2(o, 'rect', hw / 2 - 0.02, top + h + 0.1, 0.09, 0.3, 0, 4.7, 'top');
+      if (R() < 0.5) a(pick(['ellipse', 'diamond', 'rect']), 0, top + h * 0.5, 0.09, 0.09, 0, 4.8, 'orn');
+      break;
+    }
+    case 'dish': {
+      a('bowl', 0, top + 0.01, hw * 0.6, 0.1, 0, 4.8, 'a0');
+      for (let i = 0; i < 9; i++) { const th = -1.2 + 2.4 * i / 8, [x, y] = radial(m, th, 0.09, 0.95); a('tri', x, y, 0.07, 0.13, th, 1, 'top'); }
+      break;
+    }
+    case 'face': mini(o, 0, top - 0.14, rnd(0.26, 0.36), 1, m, 'top'); break;
+  }
+  return o;
+}
+
+/* ---------- eyes ---------- */
+const PUP = ['dot', 'dot', 'dot', 'slitV', 'slitV', 'slitH', 'ring', 'multi', 'cross', 'none', 'star', 'diamond', 'goat', 'key', 'heart', 'pie'];
+function eyeStyle(m) {
+  let kind = wp(m, 'classic:6|goggle:2:meso africa oceania robot andes|anime:2.5:anime|pie:2:cartoon|googly:2:cartoon carnival|hollow:1.5:skull|slit:1.5:africa oceania japan alien|cowrie:1.2:oceania africa|blank:1:greek minimal cubist|x:.8:cartoon|hypno:1.2:cartoon miro|tri:1.2:carnival skull|angry:1.5:japan tibet|compound:1:insect|dot:1.5:minimal miro bauhaus|rectE:1.2:robot china pixel|starE:.8:carnival|winged:1.2:andes meso|bar:1:minimal cubist robot|lumin:1:alien robot|cat:1.2:japan anime');
+  const st = { kind, shape: 'ellipse', dot: R() < 0.55 };
+  switch (kind) {
+    case 'cat': st.kind = 'classic'; st.shape = 'almond'; st.pupil = 'slitV'; st.slant = rnd(0.15, 0.35); break;
+    case 'classic': {
+      st.shape = pick(['ellipse', 'ellipse', 'ellipse', 'almond', 'sq']); st.socket = pick(['ellipse', 'almond', 'rect', 'tri', 'trid', null, null, null, 'poly', 'diamond', 'sq']);
+      if (st.shape === 'almond' && st.socket) st.socket = 'almond';
+      st.sockP = st.socket ? PP(st.socket) : null; st.iris = R() < 0.85; st.pupil = pick(PUP); st.hl = R() < 0.5; st.lid = R() < 0.22 ? rnd(0.3, 0.65) : 0;
+      if (R() < 0.25) st.slant = rnd(-0.3, 0.35);
+      break;
+    }
+    case 'goggle': st.rings = pick([3, 3, 4, 5]); st.shape = pick(['ellipse', 'ellipse', 'sq']); break;
+    case 'hollow': st.shape = pick(['ellipse', 'sq', 'heart', 'trid', 'almond', 'diamond']); break;
+    case 'slit': st.rim = R() < 0.5; if (R() < 0.5) st.slant = rnd(-0.3, 0.4); break;
+    case 'cowrie': st.shape = pick(['ellipse', 'almond', 'sq']); break;
+    case 'blank': st.shape = pick(['almond', 'ellipse', 'semi']); break;
+    case 'tri': st.shape = pick(['tri', 'trid', 'diamond']); break;
+    case 'angry': st.slant = rnd(0.2, 0.4); break;
+    case 'starE': st.starP = polyP(pick([8, 10, 12, 16])); st.spin = R() < 0.5 ? rnd(-0.5, 0.5) : 0; break;
+    case 'lumin': st.shape = pick(['ellipse', 'sq', 'almond', 'diamond']); break;
+    case 'googly': st.crazy = true; break;
+  }
+  if (R() < 0.1) st.crazy = true;
+  const g = R(); if (g < 0.08) st.gb = [0, -0.9]; else if (g < 0.14) st.cross = true;
+  if (['classic', 'googly', 'pie', 'lumin'].includes(st.kind) && wp(m, 'no:7|yes:1:miro china carnival') === 'yes') st.lash = 5 + Math.floor(R() * 5);
+  if (wp(m, 'no:8|yes:1.5:carnival skull japan china carib') === 'yes') { st.sur = pick(['flame', 'diamond', 'star', 'cloud', 'tri', 'almondV', 'heart', 'gear']); st.surP = PP(st.sur); }
+  st.bag = R() < 0.07; st.tear = wp(m, 'no:10|yes:1:andes carnival anime') === 'yes';
+  return st;
+}
+function eye(o, m, x, y, r, st, i) {
+  const ec = [x, y], sx = x < -0.001 ? -1 : 1, rot = -(st.slant || 0) * sx, gph = st.crazy ? 1 + i * 1.7 : 0, gb = st.cross ? [-sx * 0.8, 0.2] : st.gb;
+  const B = { ec, blink: true }, G = k => ({ ec, blink: true, gaze: r * k, gph, gb });
+  const a = (ty, dx, dy, w, h, rr, z, role, ex) => add(o, pc(ty, x + dx, y + dy, w, h, rr || 0, z, role, ex));
+  if (st.sur) a(st.sur, 0, 0, r * 3.6 * sx, r * 3.6, rot, 4.9, 'mark', { p: st.surP });
+  switch (st.kind) {
+    case 'goggle': for (let k = 0, n = st.rings; k < n; k++) { const d = r * 2.6 * (1 - k / (n + 0.4)); a(st.shape, 0, 0, d, d, 0, 5 + k * 0.5, ['socket', 'ball', 'iris', 'black', 'pupilIn'][k], k === n - 1 ? G(0.3) : B); } break;
+    case 'anime':
+      a('sq', 0, 0, r * 1.8, r * 2.5, 0, 6, 'white', B); a('ellipse', 0, r * 0.1, r * 1.35, r * 2.0, 0, 7, 'iris', G(0.35)); a('ellipse', 0, r * 0.2, r * 0.7, r * 1.1, 0, 8, 'black', G(0.35));
+      a('ellipse', -r * 0.3, -r * 0.45, r * 0.5, r * 0.5, 0, 8.2, 'white', G(0.35)); a('ellipse', r * 0.3, r * 0.5, r * 0.25, r * 0.25, 0, 8.2, 'white', G(0.35));
+      a('crescent', 0, -r * 1.15, r * 2.3, -r * 0.6, 0, 9, 'black', { p: { T: 0.3, q: 0.3 }, ec });
+      break;
+    case 'pie': a('ellipse', 0, 0, r * 1.5, r * 2.4, 0, 6, 'white', B); a('pie', 0, r * 0.3, r * 0.75, r * 1.2, sx > 0 ? -0.8 : Math.PI + 0.8, 8, 'black', G(0.5)); break;
+    case 'googly': a('ellipse', 0, 0, r * 2.3, r * 2.3, 0, 6, 'white', B); a('ellipse', 0, 0, r * 0.7, r * 0.7, 0, 8, 'black', G(1.7)); break;
+    case 'hollow': a(st.shape, 0, 0, r * 2.5, r * 2.5 * (st.shape === 'heart' ? -1 : 1), rot, 5, 'black', B); if (st.dot) a('ellipse', 0, 0, r * 0.4, r * 0.4, 0, 8, 'iris', Object.assign(G(1), { pul: 0.3 })); break;
+    case 'slit': if (st.rim) a('almond', 0, 0, r * 2.6, r * 1.1, rot, 6, 'ball', B); a('almond', 0, 0, r * 2.3, r * 0.5, rot, 8, 'black', B); break;
+    case 'cowrie': a(st.shape, 0, 0, r * 2.4, r * 1.7, rot, 6, 'ball', B); a('rect', 0, 0, r * 2.0, r * 0.14, rot, 8, 'black', B); break;
+    case 'blank': a(st.shape, 0, 0, r * 2.4, r * 1.3, rot, 6, st.dot ? 'iris' : 'ball', B); break;
+    case 'x': a('rect', 0, 0, r * 2.2, r * 0.36, Math.PI / 4, 8, 'black', { ec }); a('rect', 0, 0, r * 2.2, r * 0.36, -Math.PI / 4, 8, 'black', { ec }); break;
+    case 'hypno': a('ellipse', 0, 0, r * 2.3, r * 2.3, 0, 6, 'ball', B); a('spiral', 0, 0, r * 2.0 * sx, r * 2.0, 0, 8, 'black', { ec, blink: true, spin: 2.2 * sx, p: { t: 2.25 } }); break;
+    case 'tri': a(st.shape, 0, 0, r * 2.4, r * 2.1, rot, 6, 'ball', B); if (st.dot) a('ellipse', 0, r * 0.2 * (st.shape === 'trid' ? -1 : 1), r * 0.6, r * 0.6, 0, 8, 'black', G(0.4)); break;
+    case 'angry': a('semi', 0, 0, r * 2.4, -r * 1.5, rot, 6, 'ball', B); a('ellipse', 0, r * 0.1, r * 0.8, r * 0.8, 0, 7, 'iris', G(0.5)); a('ellipse', 0, r * 0.1, r * 0.35, r * 0.35, 0, 8, 'black', G(0.5)); break;
+    case 'compound':
+      a('ellipse', 0, 0, r * 2.4, r * 2.6, rot, 6, 'iris', B);
+      for (let k = 0; k < 7; k++) { const an = k * TAU / 6, d = k === 6 ? 0 : r * 0.62; a('poly', Math.cos(an) * d, Math.sin(an) * d, r * 0.55, r * 0.55, 0, 8, 'black', Object.assign({ p: regP(6) }, B)); }
+      a('ellipse', -r * 0.5, -r * 0.6, r * 0.3, r * 0.3, 0, 8.2, 'white', B);
+      break;
+    case 'dot': a('ellipse', 0, 0, r * 0.9, r * 0.9, 0, 8, st.dot ? 'iris' : 'black', B); break;
+    case 'rectE': a('rect', 0, 0, r * 2.8, r * 2.2, 0, 5, 'socket', B); a('rect', 0, 0, r * 2.1, r * 1.5, 0, 6, 'ball', B); a('rect', 0, 0, r * 0.4, r * 1.3, 0, 8, 'black', G(1)); break;
+    case 'starE': a('star', 0, 0, r * 3, r * 3, 0, 6, 'ball', Object.assign({ p: st.starP, spin: st.spin }, B)); a('ellipse', 0, 0, r * 0.9, r * 0.9, 0, 8, 'black', G(0.4)); break;
+    case 'winged': a('flame', 0, 0, -r * 1.5 * sx, r * 3, Math.PI / 2 * sx, 6, 'ball', B); a('ellipse', -r * 0.3 * sx, 0, r * 0.7, r * 0.7, 0, 8, 'black', G(0.3)); break;
+    case 'bar': a('rect', 0, 0, r * 2.4, r * 0.4, rot, 8, 'black', B); break;
+    case 'lumin': a(st.shape, 0, 0, r * 2.2, r * 2.2, rot, 6, 'iris', B); a('ellipse', 0, 0, r * 0.5, r * 0.5, 0, 8, 'white', G(1)); break;
+    default: {
+      const al = st.shape === 'almond', P = (ty, dx, dy, w, h, rr, role, ex) => a(ty, dx, dy, w, h, rr, 8, role || 'black', Object.assign(G(1), ex));
+      if (st.socket) a(st.socket, 0, 0, r * 2.5, r * (st.socket === 'almond' ? 1.7 : 2.4), rot, 5, 'socket', { p: st.sockP, ec });
+      a(st.shape, 0, 0, r * 2, r * (al ? 1.3 : 2), rot, 6, 'ball', B);
+      if (st.iris) a('ellipse', 0, 0, r * 1.15, r * 1.15, 0, 7, 'iris', G(1));
+      switch (st.pupil) {
+        case 'dot': P('ellipse', 0, 0, r * 0.5, r * 0.5); break;
+        case 'slitV': P('ellipse', 0, 0, r * 0.2, r * 1.05); break;
+        case 'slitH': P('ellipse', 0, 0, r * 1.05, r * 0.2); break;
+        case 'ring': P('ellipse', 0, 0, r * 0.75, r * 0.75); P('ellipse', 0, 0, r * 0.35, r * 0.35, 0, 'pupilIn'); break;
+        case 'multi': for (let q = 0; q < 3; q++) { const an = q / 3 * TAU; P('ellipse', Math.sin(an) * r * 0.3, -Math.cos(an) * r * 0.3, r * 0.24, r * 0.24); } break;
+        case 'cross': P('cross', 0, 0, r * 0.9, r * 0.9, 0, 0, { p: { k: 0.25 } }); break;
+        case 'star': P('star', 0, 0, r * 0.95, r * 0.95, 0, 0, { p: { n: 10, j: Array(10).fill(1), inner: 0.15 } }); break;
+        case 'diamond': P('diamond', 0, 0, r * 0.5, r * 0.95); break;
+        case 'goat': P('sq', 0, 0, r * 0.95, r * 0.35); break;
+        case 'key': P('key', 0, 0, r * 0.55, r * 0.9); break;
+        case 'heart': P('heart', 0, 0, r * 0.8, r * 0.8); break;
+        case 'pie': P('pie', 0, 0, r * 0.8, r * 0.8, -0.8); break;
+      }
+      if (st.hl) a('ellipse', -r * 0.3, -r * 0.32, r * 0.28, r * 0.28, 0, 8.2, 'white', G(1));
+      if (st.lid) a('rect', 0, -r + r * st.lid, r * 2.5, r * 2 * st.lid, rot, 9.5, 'lid', { ec });
+    }
+  }
+  if (st.lash) for (let k = 0, n = st.lash; k < n; k++) { const an = -Math.PI * (0.15 + 0.7 * k / (n - 1)); a('rect', Math.cos(an) * r * 1.5, Math.sin(an) * r * 1.5, r * 0.12, r * 0.6, an + Math.PI / 2, 5.5, 'brow', { ec }); }
+  if (st.bag) a('crescent', 0, r * 1.25, r * 2, r * 0.5, 0, 4.95, 'mark2', { p: { T: 0.2, q: 0.2 }, ec });
+  if (st.tear) a('drop', r * 0.2 * sx, r * 2.0, r * 0.6, r * 1.0, 0, 9, 'a0', { sway: 0.004, ph: i, pul: 0.1 });
+}
 function gEyes(m) {
-  const o = {}, y0 = rnd(-0.16, -0.02), d = rnd(0.11, 0.19), r = rnd(0.06, 0.12);
-  const L = pick(['one', 'one', 'two', 'two', 'two', 'three', 'row', 'four', 'five', 'six', 'ring', 'grid', 'odd']);
+  const o = mk(), y0 = rnd(-0.16, -0.02), d = rnd(0.11, 0.19), r = rnd(0.06, 0.12);
+  let L = wp(m, 'one:2:greek japan alien|two:6|three:1.5:india tibet|row:1|four:1:insect|five:.8|six:.8:insect|ring:.8|grid:.6|odd:1:cubist miro|stack:.8:india alien|cheeks:.7|scatter:1:medieval miro|spider:1:insect|stalk:1:alien sea cartoon insect|triple:.7:meso|cubist:1.2:cubist|huge:1:anime cartoon|tiny:.8:minimal|wide:.8:sea|none:.25:minimal');
+  if (L === 'stalk' && (Math.abs(m.fk - 1) > 0.01 || m.fy)) L = 'two';
   let E = [];
+  m.dbl = false;
   switch (L) {
     case 'one': E = [[0, y0, rnd(0.12, 0.22)]]; break;
-    case 'two': E = [[-d, y0, r], [d, y0, r]]; break;
     case 'three': E = [[-d, y0, r], [d, y0, r], [0, y0 - rnd(0.14, 0.22), r * rnd(0.6, 1)]]; break;
     case 'row': { const n = pick([3, 4, 5]), s = rnd(0.11, 0.15); for (let i = 0; i < n; i++) E.push([(i - (n - 1) / 2) * s, y0, s * 0.4]); break; }
     case 'four': E = [[-d, y0 - 0.06, r * 0.9], [d, y0 - 0.06, r * 0.9], [-d * 0.8, y0 + 0.09, r * 0.6], [d * 0.8, y0 + 0.09, r * 0.6]]; break;
@@ -206,58 +728,90 @@ function gEyes(m) {
     case 'ring': { const n = 6 + Math.floor(R() * 4), rad = rnd(0.15, 0.22); for (let i = 0; i < n; i++) { const a = i / n * TAU; E.push([Math.sin(a) * rad, y0 + 0.04 - Math.cos(a) * rad * 0.85, rnd(0.035, 0.055)]); } break; }
     case 'grid': for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) E.push([i * 0.12, y0 + j * 0.1, 0.04]); break;
     case 'odd': E = [[-rnd(0.1, 0.15), y0, rnd(0.11, 0.16)], [rnd(0.12, 0.17), y0 + rnd(-0.03, 0.04), rnd(0.04, 0.07)]]; break;
-  }
-  const st = {
-    socket: pick(['ellipse', 'almond', 'rect', 'tri', 'trid', 'none', 'poly', 'ellipse', 'diamond']),
-    iris: R() < 0.85, pupil: pick(['dot', 'dot', 'slitV', 'slitV', 'slitH', 'ring', 'multi', 'cross', 'none']),
-    hl: R() < 0.5, lid: R() < 0.22 ? rnd(0.3, 0.65) : 0
-  };
-  m.eyes = { E };
-  const sp = polyP();
-  E.forEach(([x, y, r], i) => {
-    const k = 'e' + i, almond = st.socket === 'almond', ec = [x, y];
-    if (st.socket !== 'none') o[k + 's'] = pc(st.socket, x, y, r * 2.5, r * (almond ? 1.7 : 2.4), 0, 5, 'socket', { p: sp, ec });
-    o[k + 'b'] = pc(almond ? 'almond' : 'ellipse', x, y, r * 2, r * (almond ? 1.3 : 2), 0, 6, 'ball', { ec, blink: true });
-    if (st.iris) o[k + 'i'] = pc('ellipse', x, y, r * 1.15, r * 1.15, 0, 7, 'iris', { ec, blink: true, gaze: r });
-    const P = (id, t, dx, dy, w, h, rot, role) => { o[k + id] = pc(t, x + dx, y + dy, w, h, rot || 0, 8, role || 'pupil', { ec, blink: true, gaze: r }); };
-    switch (st.pupil) {
-      case 'dot': P('p', 'ellipse', 0, 0, r * 0.5, r * 0.5); break;
-      case 'slitV': P('p', 'ellipse', 0, 0, r * 0.2, r * 1.05); break;
-      case 'slitH': P('p', 'ellipse', 0, 0, r * 1.05, r * 0.2); break;
-      case 'ring': P('p', 'ellipse', 0, 0, r * 0.75, r * 0.75); P('p2', 'ellipse', 0, 0, r * 0.35, r * 0.35, 0, 'pupilIn'); break;
-      case 'multi': for (let q = 0; q < 3; q++) { const a = q / 3 * TAU; P('p' + q, 'ellipse', Math.sin(a) * r * 0.3, -Math.cos(a) * r * 0.3, r * 0.24, r * 0.24); } break;
-      case 'cross': P('p', 'rect', 0, 0, r * 0.95, r * 0.16); P('p2', 'rect', 0, 0, r * 0.16, r * 0.95); break;
+    case 'stack': E = [[0, y0 + 0.02, r], [0, y0 - r * 2.1, r * 0.8]]; if (R() < 0.5) E.push([0, y0 - r * 3.8, r * 0.6]); break;
+    case 'cheeks': E = [[-d, y0, r], [d, y0, r], [-d * 1.1, y0 + 0.24, r * 0.6], [d * 1.1, y0 + 0.24, r * 0.6]]; break;
+    case 'scatter': {
+      const n = 3 + Math.floor(R() * 4), sym = R() < 0.7;
+      for (let i = 0; i < n; i++) { const x = rnd(0.05, 0.3), y = rnd(-0.3, 0.15), rr = rnd(0.025, 0.07); if (sym) E.push([-x, y, rr], [x, y, rr]); else E.push([x * pick([-1, 1]), y, rr], [rnd(-0.3, 0.3), rnd(-0.3, 0.15), rnd(0.025, 0.07)]); }
+      break;
     }
-    if (st.hl) P('h', 'ellipse', -r * 0.3, -r * 0.32, r * 0.28, r * 0.28, 0, 'hl');
-    if (st.lid) o[k + 'l'] = pc('rect', x, y - r + r * st.lid, r * 2.5, r * 2 * st.lid, 0, 9.5, 'lid', { ec });
-  });
+    case 'spider': { E = [[-d, y0 + 0.03, r], [d, y0 + 0.03, r]]; const n = pick([4, 6]); for (let i = 0; i < n; i++) { const a = (i - (n - 1) / 2) * 0.42; E.push([Math.sin(a) * 0.28, y0 - 0.06 - Math.cos(a) * 0.12, r * 0.4]); } break; }
+    case 'stalk': {
+      const n = pick([2, 2, 3]), sp = rnd(0.2, 0.3), top = m.head.top;
+      for (let i = 0; i < n; i++) {
+        const x = (i - (n - 1) / 2) * sp, y = top - rnd(0.12, 0.3), bx = x * 0.6, by = top + 0.05, len = Math.hypot(x - bx, y - by);
+        add(o, pc('rect', (x + bx) / 2, (y + by) / 2, 0.03, len, Math.atan2(x - bx, by - y), 1, 'top'));
+        E.push([x, y, r * 0.9]);
+      }
+      break;
+    }
+    case 'triple': E = [[-d * 1.7, y0, r * 0.9], [0, y0, r * 0.9], [d * 1.7, y0, r * 0.9]]; m.dbl = true; break;   // two faces sharing one eye
+    case 'cubist': E = [[-d, y0 - rnd(0, 0.08), r * rnd(0.8, 1.3)], [d * rnd(0.7, 1.2), y0 + rnd(0.02, 0.12), r * rnd(0.6, 1)]]; break;
+    case 'huge': { const rr = rnd(0.13, 0.17); E = [[-0.19, y0 + 0.03, rr], [0.19, y0 + 0.03, rr]]; break; }
+    case 'tiny': { const rr = rnd(0.025, 0.04), dd = rnd(0.06, 0.25); E = [[-dd, y0, rr], [dd, y0, rr]]; break; }
+    case 'wide': { const dd = Math.min(0.36, m.head.w * 0.4 / m.fk); E = [[-dd, y0, r], [dd, y0, r]]; break; }
+    case 'none': break;
+    default: E = [[-d, y0, r], [d, y0, r]];
+  }
+  const st0 = eyeStyle(m), each = L === 'cubist' || L === 'odd' || R() < 0.06;
+  if (E.length && wp(m, 'no:9|yes:1:cartoon carib carnival') === 'yes') { const xs = Math.max(...E.map(e => Math.abs(e[0]) + e[2])), ys = E.map(e => e[1]); add(o, pc(pick(['rect', 'sq', 'almond', 'ellipse']), 0, (Math.min(...ys) + Math.max(...ys)) / 2, xs * 2 + 0.1, Math.max(...ys) - Math.min(...ys) + r * 3.2, 0, 4.85, 'mark')); }
+  E.forEach(([x, y, rr], i) => eye(o, m, x, y, rr, each ? eyeStyle(m) : st0, i));
+  m.eyes = { E };
   return o;
 }
 
 function gBrows(m) {
-  const o = {}; if (R() < 0.5 || !m.eyes) return o;
-  const E = m.eyes.E, top = Math.min(...E.map(e => e[1] - e[2])), xs = Math.max(...E.map(e => Math.abs(e[0]) + e[2])), h = rnd(0.03, 0.07);
-  if (R() < 0.25 || xs < 0.1) o.brow = pc(pick(['rect', 'almond', 'poly']), 0, top - 0.05, Math.max(0.2, xs * 2.2), h, 0, 9.6, 'brow', { p: polyP() });
-  else {
-    const t = pick(['rect', 'tri', 'almond', 'trid']), w = Math.max(0.12, xs * rnd(0.7, 1)), r = rnd(-0.5, 0.5);
-    o.browR = pc(t, w * 0.55, top - 0.045, w, h, r, 9.6, 'brow'); o.browL = pc(t, -w * 0.55, top - 0.045, -w, h, -r, 9.6, 'brow');
+  const o = mk(), E = m.eyes && m.eyes.E; if (!E || !E.length) return o;
+  const t = wp(m, 'none:5|bar:2|angry:2:japan tibet|sad:.8:carnival|arch:1.5:anime cartoon greek|flame:1.5:tibet japan bali|uni:1:cartoon|zig:.6|bushy:1:china cartoon|dots:.7:japan');
+  const top = Math.min(...E.map(e => e[1] - e[2])), xs = Math.max(...E.map(e => Math.abs(e[0]) + e[2])), h = rnd(0.03, 0.07), w = Math.max(0.12, xs * rnd(0.7, 1)), y = top - 0.045;
+  switch (t) {
+    case 'bar': S2(o, pick(['rect', 'tri', 'almond', 'trid', 'capsule']), w * 0.55, y, w, h, rnd(-0.15, 0.15), 9.6, 'brow'); break;
+    case 'angry': S2(o, pick(['rect', 'tri', 'trid', 'almond']), w * 0.55, y, w, h, -rnd(0.2, 0.5), 9.6, 'brow'); break;
+    case 'sad': S2(o, pick(['rect', 'almond']), w * 0.55, y, w, h, rnd(0.2, 0.45), 9.6, 'brow'); break;
+    case 'arch': S2(o, 'crescent', w * 0.55, y - 0.01, w, -h * 2.2, 0, 9.6, 'brow', { p: { T: 0.3, q: 0.25 } }); break;
+    case 'flame': S2(o, 'flame', w * 0.6, y - 0.02, -w * 0.4, w * 1.1, Math.PI / 2 - 0.3, 9.6, 'brow', { sw: 0.3 }); break;
+    case 'uni': add(o, pc(pick(['rect', 'almond', 'capsule', 'trid']), 0, y, Math.max(0.2, xs * 2.2), h * 1.2, 0, 9.6, 'brow')); break;
+    case 'zig': add(o, pc('zig', 0, y, Math.max(0.2, xs * 2.2), h * 1.6, 0, 9.6, 'brow')); break;
+    case 'bushy': S2(o, 'cloud', w * 0.55, y, w, h * 2.4, rnd(-0.3, 0.1), 9.6, 'brow'); break;
+    case 'dots': S2(o, 'ellipse', xs * 0.6, top - 0.12, 0.06, 0.045, 0, 9.6, 'brow'); break;
   }
   return o;
 }
 
+/* ---------- nose ---------- */
 function gNose(m) {
-  const o = {}, y = rnd(0.06, 0.14);
-  switch (pick(['none', 'tri', 'tri', 'nostrils', 'beak', 'trunk', 'snout', 'hole'])) {
-    case 'tri': o.nose = pc('tri', 0, y, rnd(0.07, 0.14), rnd(0.1, 0.16), 0, 7.6, 'hole'); break;
-    case 'nostrils': { const s = rnd(0.03, 0.06); o.nL = pc('ellipse', -s, y + 0.03, s * 0.9, s * 1.4, -0.3, 7.6, 'hole'); o.nR = pc('ellipse', s, y + 0.03, s * 0.9, s * 1.4, 0.3, 7.6, 'hole'); break; }
-    case 'beak': o.nose = pc('trid', 0, y + 0.08, rnd(0.16, 0.3), rnd(0.22, 0.4), 0, 8.8, 'beak'); break;
-    case 'trunk': { const h = rnd(0.3, 0.55); o.nose = pc('rect', 0, y + h / 2 - 0.05, rnd(0.07, 0.12), h, 0, 8.8, 'beak'); o.nT = pc('ellipse', 0, y + h - 0.05, 0.12, 0.06, 0, 8.9, 'hole'); break; }
-    case 'snout': { const w = rnd(0.14, 0.22); o.nose = pc('ellipse', 0, y + 0.02, w, w * 0.65, 0, 7.6, 'beak'); o.nL = pc('ellipse', -w * 0.2, y + 0.02, w * 0.16, w * 0.26, 0, 7.7, 'hole'); o.nR = pc('ellipse', w * 0.2, y + 0.02, w * 0.16, w * 0.26, 0, 7.7, 'hole'); break; }
-    case 'hole': o.nose = pc('ellipse', 0, y, rnd(0.05, 0.09), rnd(0.06, 0.11), 0, 7.6, 'hole'); break;
+  const o = mk(), y = rnd(0.06, 0.14), a = (...q) => add(o, pc(...q)), nostrils = s => S2(o, 'ellipse', s, y + 0.03, s * 0.9, s * 1.4, 0.3, 7.6, 'black');
+  switch (wp(m, 'none:2|tri:2|nostrils:2|beak:1.5:medieval|trunk:1:india|snout:1.5:cartoon|hole:1|skull:1.5:skull|ball:1.2:carnival cartoon|long:1.2:africa oceania minimal|profile:1.5:cubist|hook:1.5:medieval carnival japan|bill:1:cartoon|bat:.8:medieval andes|ring:1.2:greek meso andes india|bar:.8:meso amazon|curl:1:meso china|line:1:minimal bauhaus|plague:.7:carnival|cat:1:anime japan')) {
+    case 'tri': a('tri', 0, y, rnd(0.07, 0.14), rnd(0.1, 0.16), 0, 7.6, 'black'); break;
+    case 'nostrils': nostrils(rnd(0.03, 0.06)); break;
+    case 'beak': a('trid', 0, y + 0.08, rnd(0.16, 0.3), rnd(0.22, 0.4), 0, 8.8, 'nose'); break;
+    case 'trunk': { const h = rnd(0.3, 0.55); a(pick(['rect', 'capsule', 'trap']), 0, y + h / 2 - 0.05, rnd(0.07, 0.12), h, 0, 8.8, 'nose', { sw: 0.6, pv: [0, y - 0.05] }); a('ellipse', 0, y + h - 0.05, 0.12, 0.06, 0, 8.9, 'black', { sw: 0.6, pv: [0, y - 0.05] }); break; }
+    case 'snout': { const w = rnd(0.14, 0.22); a(pick(['ellipse', 'sq']), 0, y + 0.02, w, w * 0.65, 0, 7.6, 'nose'); S2(o, 'ellipse', w * 0.2, y + 0.02, w * 0.16, w * 0.26, 0, 7.7, 'black'); break; }
+    case 'hole': a('ellipse', 0, y, rnd(0.05, 0.09), rnd(0.06, 0.11), 0, 7.6, 'black'); break;
+    case 'skull': a('heart', 0, y, rnd(0.08, 0.12), -rnd(0.1, 0.14), 0, 7.6, 'black'); break;
+    case 'ball': { const d = rnd(0.1, 0.18); a('ellipse', 0, y + 0.02, d, d, 0, 8.8, 'nose', { pul: 0.04 }); a('ellipse', -d * 0.2, y + 0.02 - d * 0.2, d * 0.22, d * 0.22, 0, 8.9, 'white'); break; }
+    case 'long': a(pick(['rect', 'capsule', 'trap', 'tri']), 0, y - 0.06, rnd(0.04, 0.08), rnd(0.25, 0.36), 0, 7.6, 'nose'); if (R() < 0.5) nostrils(0.025); break;
+    case 'profile': a('rtri', rnd(-0.03, 0.03), y - 0.02, pick([-1, 1]) * rnd(0.1, 0.16), rnd(0.2, 0.3), 0, 7.6, 'nose'); break;
+    case 'hook': a('horn', 0, y + 0.06, pick([-1, 1]) * rnd(0.12, 0.18), -rnd(0.24, 0.36), 0, 8.8, 'nose', { p: { curl: f3(rnd(0.5, 1)) } }); break;
+    case 'bill': a(pick(['sq', 'ellipse', 'trap']), 0, y + 0.06, rnd(0.3, 0.42), rnd(0.1, 0.16), 0, 8.8, 'nose'); S2(o, 'ellipse', 0.04, y + 0.03, 0.02, 0.03, 0, 8.9, 'black'); break;
+    case 'bat': a('heart', 0, y, 0.14, 0.12, 0, 7.6, 'nose'); S2(o, 'ellipse', 0.03, y, 0.025, 0.04, 0, 7.7, 'black'); break;
+    case 'ring': nostrils(0.03); a('crescent', 0, y + 0.1, 0.1, 0.09, 0, 8.9, 'orn', { p: { T: 0.12, q: 0.5, fl: 1 }, sw: 1.5, sf: 2, pv: [0, y + 0.05] }); break;
+    case 'bar': { const w = rnd(0.2, 0.3); nostrils(0.03); a('rect', 0, y + 0.05, w, 0.022, 0, 8.9, 'orn'); S2(o, 'ellipse', w / 2, y + 0.05, 0.045, 0.045, 0, 8.95, 'orn2'); break; }
+    case 'curl': a('spiral', 0, y + 0.03, pick([-1, 1]) * 0.14, 0.14, 0, 7.6, 'nose'); break;
+    case 'line': a('rect', 0, y - 0.04, 0.016, rnd(0.16, 0.26), 0, 7.6, 'brow'); break;
+    case 'plague': a('trid', 0, y + 0.2, rnd(0.16, 0.24), rnd(0.4, 0.55), 0, 8.9, 'nose'); a('rect', 0, y - 0.02, 0.2, 0.03, 0, 8.95, 'brow'); break;
+    case 'cat': a('trid', 0, y, 0.07, 0.05, 0, 7.6, 'nose'); a('rect', 0, y + 0.05, 0.012, 0.05, 0, 7.6, 'brow'); break;
+  }
+  switch (wp(m, 'none:7|whisk:1.5:japan anime cartoon|barbel:1.2:china sea|stache:1.2:india carnival cartoon greek')) {
+    case 'whisk': for (const j of [-1, 0, 1]) S2(o, 'rect', 0.17, y + 0.06 + j * 0.03, 0.16, 0.01, j * 0.2, 7.5, 'brow'); break;
+    case 'barbel': { const len = rnd(0.25, 0.4), th = rnd(2.2, 2.8); S2(o, 'snake', 0.05 + Math.sin(th) * len / 2, y + 0.05 - Math.cos(th) * len / 2, 0.14, len, th, 7.5, 'nose', { sw: 1.5, pv: [0.05, y + 0.05] }); break; }
+    case 'stache': S2(o, pick(['crescent', 'flame', 'spiral', 'tri', 'almond']), 0.09, y + 0.11, 0.16, 0.08, rnd(-0.3, 0.3), 8.7, 'brow'); break;
   }
   return o;
 }
 
+/* ---------- mouth ---------- */
+const MSH = { wide: 'ellipse', rect: 'rect', smile: 'bowl', frown: 'semi', O: 'ellipse', vertical: 'almondV', zig: 'zig', sqm: 'sq', dia: 'diamond' };
 function mouthEdges(shape, u, mh) {
   const s = Math.sqrt(Math.max(0, 1 - u * u));
   switch (shape) {
@@ -265,118 +819,325 @@ function mouthEdges(shape, u, mh) {
     case 'semi': return [mh / 2 - mh * s, mh / 2];
     case 'bowl': return [-mh / 2, -mh / 2 + mh * s];
     case 'zig': return [-mh * 0.3, mh * 0.3];
+    case 'diamond': return [-(1 - Math.abs(u)) * mh / 2, (1 - Math.abs(u)) * mh / 2];
     default: return [-mh / 2, mh / 2];
   }
 }
-function oneMouth(o, k, my, t) {
+function oneMouth(o, m, cx, my, t, sc, zo) {
+  sc = sc || 1; zo = zo || 0;
   const vertical = t === 'vertical';
-  const mw = vertical ? rnd(0.08, 0.14) : t === 'O' ? rnd(0.12, 0.22) : rnd(0.28, 0.56);
-  const mh = vertical ? rnd(0.22, 0.36) : t === 'O' ? mw : rnd(0.07, 0.18);
-  const shape = { wide: 'ellipse', rect: 'rect', smile: 'bowl', frown: 'semi', O: 'ellipse', vertical: 'almondV', zig: 'zig' }[t] || 'ellipse';
-  const M = { mc: my };
-  if (R() < 0.55) o[k + 'lip'] = pc(shape, 0, my, mw * 1.2, mh * 1.35 + 0.02, 0, 6, 'lip', M);
-  o[k + 'cav'] = pc(shape, 0, my, mw, mh, 0, 6.5, 'cavity', M);
-  if (R() < 0.25 && !vertical) o[k + 'tng'] = pc('ellipse', rnd(-0.03, 0.03), my + mh * 0.35, mw * rnd(0.25, 0.4), Math.max(0.08, mh * 0.9), 0, 7, 'tongue', M);
-  const style = vertical ? pick(['side', 'side', 'none']) : pick(['row', 'row', 'both', 'both', 'fangs', 'tusks', 'none', 'shark']);
-  const row = (id, n, top, len) => {
+  const mw = (vertical ? rnd(0.08, 0.14) : t === 'O' ? rnd(0.12, 0.22) : rnd(0.28, 0.56)) * sc;
+  const mh = vertical ? rnd(0.22, 0.36) * sc : t === 'O' ? mw : rnd(0.07, 0.18) * sc;
+  const shape = MSH[t] || 'ellipse', a = (ty, x, y, w, h, r, z, role, ex) => add(o, pc(ty, cx + x, y, w, h, r, z + zo, role, Object.assign({ mc: my }, ex)));
+  if (R() < 0.55) a(shape, 0, my, mw * 1.2, mh * 1.35 + 0.02 * sc, 0, 6, 'lip');
+  a(shape, 0, my, mw, mh, 0, 6.5, 'cavity');
+  if (R() < 0.25 && !vertical) a('ellipse', rnd(-0.03, 0.03) * sc, my + mh * 0.35, mw * rnd(0.25, 0.4), Math.max(0.08 * sc, mh * 0.9), 0, 7, 'tongue');
+  const style = vertical ? pick(['side', 'side', 'none']) : wp(m, 'row:2|both:2|fangs:1.2:japan anime|tusks:1:india bali|none:1|shark:1:sea|grid:1.2:skull cartoon|buck:.8:cartoon|single:.5:cartoon|needle:.8:sea alien|gold:.5|inter:1:andes meso');
+  const row = (n, top, len, ty, wk) => {
     const tw = mw * 0.9 / n;
     for (let j = 0; j < n; j++) {
-      const x = (-0.45 + (j + 0.5) / n * 0.9) * mw, [ey0, ey1] = mouthEdges(shape, x / (mw / 2), mh), room = ey1 - ey0;
-      if (room < 0.012) continue;
+      const x = (-0.45 + (j + 0.5) / n * 0.9) * mw, [e0, e1] = mouthEdges(shape, x / (mw / 2), mh), room = e1 - e0;
+      if (room < 0.012 * sc) continue;
       const th = Math.min(len, room * 0.48);
-      o[k + id + j] = pc(top ? 'trid' : 'tri', x, my + (top ? ey0 + th / 2 : ey1 - th / 2), tw * 0.95, th, 0, 8, j % 2 ? 'tooth2' : 'tooth', M);
+      a(ty || (top ? 'trid' : 'tri'), x, my + (top ? e0 + th / 2 : e1 - th / 2), tw * (wk || 0.95), th, 0, 8, j % 2 ? 'tooth2' : 'tooth');
     }
   };
   const n = 4 + Math.floor(R() * 9), len = mh * rnd(0.3, 0.6);
-  if (style === 'row' || style === 'both') row('t', n, true, len);
-  if (style === 'both') row('b', n + (R() < 0.5 ? 1 : -1), false, len * rnd(0.6, 1));
-  if (style === 'shark') { row('t', n + 6, true, len * 0.7); row('b', n + 5, false, len * 0.7); }
-  if (style === 'fangs') { const x = mw * rnd(0.12, 0.3), h = mh * rnd(0.9, 1.8), w = mw * rnd(0.06, 0.1); for (const s of [1, -1]) o[k + 'f' + s] = pc('trid', s * x, my - mh / 2 + h / 2, w, h, 0, 8.1, 'tooth', M); }
-  if (style === 'tusks') { const w = rnd(0.05, 0.09), h = rnd(0.14, 0.28), curl = +rnd(0.3, 0.9).toFixed(3); for (const s of [1, -1]) o[k + 'k' + s] = pc('horn', s * mw * 0.45, my - h * 0.35, s * w, h, s * rnd(-0.2, 0.3), 8.5, 'tooth', Object.assign({ p: { curl } }, M)); }
-  if (style === 'side') { const nn = 3 + Math.floor(R() * 4); for (let j = 0; j < nn; j++) { const y = my + (-0.4 + (j + 0.5) / nn * 0.8) * mh, hw = mw * 0.375 * Math.sqrt(Math.max(0, 1 - Math.pow(2 * (y - my) / mh, 2))); for (const s of [1, -1]) o[k + 's' + s + j] = pc('tri', -s * (hw - 0.012), y, mh / nn * 0.9, Math.min(0.05, hw * 0.8), s * Math.PI / 2, 8, j % 2 ? 'tooth2' : 'tooth', M); } }
-  return mh;
-}
-function gMouth() {
-  const o = {}, t = pick(['wide', 'wide', 'rect', 'smile', 'frown', 'O', 'vertical', 'zig', 'double']);
-  const my = rnd(0.2, 0.3);
-  if (t === 'double') { const h = oneMouth(o, 'm', my - 0.03, pick(['wide', 'rect', 'smile'])); oneMouth(o, 'n', my + h + 0.06, pick(['wide', 'rect', 'frown', 'O'])); }
-  else oneMouth(o, 'm', my, t);
-  return o;
-}
-
-function gExtras(m) {
-  const o = {}, hw = m.head.w, hh = m.head.h;
-  if (R() < 0.3) { const r = rnd(0.04, 0.08), x = hw * rnd(0.25, 0.35), y = rnd(0.06, 0.16); o.chL = pc('ellipse', -x, y, r * 2, r * 2, 0, 4, 'cheek'); o.chR = pc('ellipse', x, y, r * 2, r * 2, 0, 4, 'cheek'); }
-  if (R() < 0.2) { const n = 2 + Math.floor(R() * 4); for (let i = 0; i < n; i++) { const x = rnd(0.05, hw * 0.36), y = rnd(-0.3, 0.32), r = rnd(0.012, 0.03); o['wL' + i] = pc('ellipse', -x, y, r * 2, r * 2, 0, 4.2, 'wart'); o['wR' + i] = pc('ellipse', x, y, r * 2, r * 2, 0, 4.2, 'wart'); } }
-  if (R() < 0.25) {
-    const n = 3 + Math.floor(R() * 4), sp = rnd(0.07, 0.1);
-    for (let c = 0; c < n; c++) { const x0 = (c - (n - 1) / 2) * sp; for (let k = 0; k < 5; k++) { const r = 0.05 * (1 - k * 0.15); o['tn' + c + '_' + k] = pc('ellipse', x0 * (1 + k * 0.15), hh / 2 - 0.06 + k * 0.07, r * 2, r * 2, 0, 1.5 - k * 0.01, (c + k) % 2 ? 'tent2' : 'tent1', { sway: k * 0.014, ph: c * 0.9 + k * 0.6 }); } }
+  switch (style) {
+    case 'row': row(n, true, len); break;
+    case 'both': row(n, true, len); row(n + (R() < 0.5 ? 1 : -1), false, len * rnd(0.6, 1)); break;
+    case 'shark': row(n + 6, true, len * 0.7); row(n + 5, false, len * 0.7); break;
+    case 'needle': row(n + 8, true, len * 1.3, 'trid', 0.6); row(n + 7, false, len * 1.3, 'tri', 0.6); break;
+    case 'grid': row(n, true, len, 'rect', 0.82); row(n, false, len, 'rect', 0.82); break;
+    case 'gold': row(n, true, len); a('rect', mw * 0.1, my - mh / 2 + len / 2, mw * 0.9 / n, len, 0, 8.05, 'orn'); break;
+    case 'buck': { const h = mh * 0.7; for (const s of [-1, 1]) a(pick(['rect', 'sq']), s * mw * 0.07, my - mh / 2 + h / 2, mw * 0.12, h, 0, 8, 'tooth'); break; }
+    case 'single': a(pick(['rect', 'trid']), rnd(-0.3, 0.3) * mw, my - mh / 2 + mh * 0.3, mw * 0.12, mh * 0.6, 0, 8, 'tooth'); break;
+    case 'fangs': { const x = mw * rnd(0.12, 0.3), h = mh * rnd(0.9, 1.8), w = mw * rnd(0.06, 0.1); for (const s of [1, -1]) a('trid', s * x, my - mh / 2 + h / 2, w, h, 0, 8.1, 'tooth'); break; }
+    case 'tusks': { const w = rnd(0.05, 0.09) * sc, h = rnd(0.14, 0.28) * sc, curl = f3(rnd(0.3, 0.9)); for (const s of [1, -1]) a('horn', s * mw * 0.45, my - h * 0.35, s * w, h, s * rnd(-0.2, 0.3), 8.5, 'tooth', { p: { curl } }); break; }
+    case 'inter': { const h = mh * 1.1, w = mw * 0.09; for (const s of [1, -1]) { a('trid', s * mw * 0.2, my - mh / 2 + h / 2, w, h, 0, 8.1, 'tooth'); a('tri', s * mw * 0.36, my + mh / 2 - h / 2, w, h, 0, 8.1, 'tooth'); } break; }
+    case 'side': { const nn = 3 + Math.floor(R() * 4); for (let j = 0; j < nn; j++) { const y = my + (-0.4 + (j + 0.5) / nn * 0.8) * mh, hw = mw * 0.375 * Math.sqrt(Math.max(0, 1 - Math.pow(2 * (y - my) / mh, 2))); for (const s of [1, -1]) a('tri', -s * (hw - 0.012), y, mh / nn * 0.9, Math.min(0.05, hw * 0.8), s * Math.PI / 2, 8, j % 2 ? 'tooth2' : 'tooth'); } break; }
   }
-  if (R() < 0.15) { const n = 5 + 2 * Math.floor(R() * 3); for (let i = 0; i < n; i++) { const th = Math.PI + (i / (n - 1) - 0.5) * 1.8, h = rnd(0.1, 0.22); o['bd' + i] = pc('tri', Math.sin(th) * hw / 2 - Math.sin(th) * h * 0.3, -Math.cos(th) * hh / 2 + h * 0.3, rnd(0.05, 0.09), h, th, 1.5, 'beard', { sway: 0.01, ph: i * 0.7 }); } }
-  if (R() < 0.12) { const n = 1 + Math.floor(R() * 3); for (let i = 0; i < n; i++) o['sc' + i] = pc('rect', rnd(-0.2, 0.2), rnd(-0.3, 0.3), rnd(0.25, 0.45), 0.016, rnd(-1.2, 1.2), 9.7, 'scar'); }
+  return [mw, mh];
+}
+function gMouth(m) {
+  const o = mk(), my = rnd(0.2, 0.3), M = { mc: my }, a = (ty, x, y, w, h, r, z, role, ex) => add(o, pc(ty, x, y, w, h, r, z, role, ex === undefined ? M : ex));
+  const t = wp(m, 'wide:4|rect:2:robot meso|smile:2:cartoon|frown:1.5:greek japan|O:1.5:greek|vertical:1:alien insect|zig:1:skull pixel|dia:.7:africa|double:1|curve:1.5:minimal anime cartoon|tiny:1.5:anime minimal alien|cat:1:anime japan|skull:1.5:skull|stitch:1:skull cartoon|beak:1.2:sea medieval|lamprey:1.2:sea alien|mandibles:1.2:insect|tusked:2.5:bali india lanka japan greek china|jawless:1.2:india china|nested:1:alien medieval|triple:.7|mega:1:greek|grille:1.2:robot|eight:1:oceania|bar:1:minimal bauhaus|eyemouth:.7:medieval miro|facemouth:.6:medieval|slit:1:japan|lips:1:cartoon|snarl:1.2:meso andes china|none:.3:minimal');
+  let issue = true;
+  switch (t) {
+    case 'double': { const [, h] = oneMouth(o, m, 0, my - 0.03, pick(['wide', 'rect', 'smile'])); oneMouth(o, m, 0, my + h + 0.06, pick(['wide', 'rect', 'frown', 'O'])); break; }
+    case 'curve': a('crescent', 0, my, rnd(0.2, 0.4), rnd(0.06, 0.12) * (R() < 0.7 ? 1 : -1), 0, 6.5, 'cavity', { p: { T: 0.12, q: 0.3, fl: 1 }, mc: my }); break;
+    case 'tiny': a(pick(['ellipse', 'tri', 'trid', 'rect', 'diamond']), 0, my, rnd(0.04, 0.08), rnd(0.02, 0.06), 0, 6.5, 'cavity'); issue = false; break;
+    case 'cat': S2(o, 'crescent', 0.04, my, 0.08, 0.05, 0, 6.5, 'cavity', { p: { T: 0.2, q: 0.1, fl: 1 }, mc: my }); if (R() < 0.4) a('trid', 0.05, my + 0.03, 0.025, 0.04, 0, 8, 'tooth'); issue = false; break;
+    case 'skull': {
+      const n = 6 + Math.floor(R() * 5), mw = rnd(0.3, 0.5), th = rnd(0.05, 0.07);
+      a('rect', 0, my, mw * 1.04, th * 2.3, 0, 6.5, 'black');
+      for (let j = 0; j < n; j++) for (const s of [-1, 1]) a(pick(['rect', 'sq']), (j - (n - 1) / 2) * mw / n, my + s * th * 0.56, mw / n * 0.82, th, 0, 8, 'tooth');
+      break;
+    }
+    case 'stitch': case 'slit': {
+      const mw = t === 'slit' ? rnd(0.5, 0.62) : rnd(0.25, 0.45), n = 5 + Math.floor(R() * 6);
+      a(t === 'slit' && R() < 0.5 ? 'crescent' : 'rect', 0, my, mw, t === 'slit' ? rnd(0.03, 0.08) : 0.012, 0, 6.5, 'black', { p: { T: 0.1, q: 0.3, fl: 1 }, mc: my });
+      for (let j = 0; j < n; j++) a('rect', (j - (n - 1) / 2) * mw / n, my, 0.012, 0.06, rnd(-0.2, 0.2), 8, 'black');
+      break;
+    }
+    case 'beak': {
+      const w = rnd(0.16, 0.3), h = rnd(0.12, 0.22);
+      a('diamond', 0, my - h * 0.15, w * 1.1, h * 1.9, 0, 6.5, 'black'); a('trid', 0, my - h / 2, w, h, 0, 8.6, 'nose'); a('tri', 0, my + h * 0.35, w * 0.8, h * 0.7, 0, 8.6, 'lip');
+      break;
+    }
+    case 'lamprey': {
+      const d = rnd(0.28, 0.42);
+      a('ellipse', 0, my, d, d, 0, 6, 'lip', { pul: 0.05 }); a('ellipse', 0, my, d * 0.86, d * 0.86, 0, 6.5, 'black', { pul: 0.05 });
+      for (let k = 0, rings = pick([2, 2, 3]); k < rings; k++) { const rad = d / 2 * (0.76 - k * 0.24), n = 14 - k * 4, orb = (k % 2 ? -1 : 1) * rnd(0.2, 0.6); for (let i = 0; i < n; i++) { const an = i / n * TAU; a('tri', Math.cos(an) * rad, my + Math.sin(an) * rad, d * 0.09, d * 0.14, an - Math.PI / 2, 8 + k * 0.1, k % 2 ? 'tooth2' : 'tooth', { pv: [0, my], orb }); } }
+      break;
+    }
+    case 'mandibles': {
+      const [mw] = oneMouth(o, m, 0, my, pick(['O', 'vertical']), 1), x = mw * 0.5 + 0.04;
+      S2(o, 'horn', x, my + 0.06, -0.1, -0.24, 0, 8.5, 'tooth', { p: { curl: 0.9 }, sw: 1.5, sf: 2.5, pv: [x, my - 0.06] });
+      break;
+    }
+    case 'tusked': {                             // wide fanged mouths with a hanging tongue
+      const mw = rnd(0.4, 0.6), mh = rnd(0.14, 0.22), sh = pick(['rect', 'sq', 'ellipse', 'bowl', 'trap']);
+      a(sh, 0, my, mw * 1.14, mh * 1.3, 0, 6, 'lip'); a(sh, 0, my, mw, mh, 0, 6.5, 'cavity');
+      for (let j = 0, n = 5 + Math.floor(R() * 6); j < n; j++) a('trid', (j - (n - 1) / 2) * mw * 0.75 / n, my - mh * 0.28, mw * 0.7 / n, mh * 0.4, 0, 8, j % 2 ? 'tooth2' : 'tooth');
+      S2(o, 'trid', mw * 0.3, my - mh * 0.5 + mh * 0.6, 0.05, mh * 1.2, 0, 8.2, 'tooth', M); S2(o, 'tri', mw * 0.43, my - mh * 0.2, 0.06, mh * 1.5, 0.1, 8.5, 'tooth', M);
+      if (R() < 0.7) {
+        const L = rnd(0.25, 0.55), ty = pick(['capsule', 'drop', 'snake', 'almondV', 'sq']), A = { sw: 0.6, sf: 1.3, pv: [0, my] };
+        a(ty, 0, my + L / 2, rnd(0.1, 0.18), ty === 'snake' ? -L : L, 0, 8.4, 'tongue', A);
+        if (R() < 0.3) a('rect', 0, my + L * 0.45, 0.012, L * 0.7, 0, 8.45, 'black', A);
+        if (R() < 0.3) for (const s of [-1, 1]) a('tri', s * 0.03, my + L + 0.03, 0.05, -0.1, 0, 8.4, 'tongue', A);
+      }
+      break;
+    }
+    case 'jawless': {                            // faces without a lower jaw, things pouring from the mouth
+      const mj = 0.08 + (m.head.bot - 0.05 - m.fy - 0.08) / m.fk, mw = rnd(0.4, 0.6), n = 5 + Math.floor(R() * 5), th = rnd(0.06, 0.1), J = { mc: mj };
+      a(pick(['rect', 'bowl', 'sq']), 0, mj, mw, 0.07, 0, 6.5, 'lip', J);
+      for (let j = 0; j < n; j++) { const e = j === 0 || j === n - 1; a('trid', (j - (n - 1) / 2) * mw * 0.9 / n, mj + 0.03 + th * (e ? 0.9 : 0.5), mw * 0.8 / n, th * (e ? 1.8 : 1), 0, 8, j % 2 ? 'tooth2' : 'tooth', J); }
+      const what = pick(['beads', 'beads', 'snakes', 'flames', 'none']);
+      if (what === 'beads') for (const s of [-1, 1]) for (let c = 0; c < 2; c++) for (let j = 0; j < 6; j++) a('ellipse', s * (mw * 0.12 + c * mw * 0.2 + j * 0.02), mj + 0.1 + j * 0.05, 0.04, 0.04, 0, 6, (j + c) % 2 ? 'a0' : 'a1', { sway: j * 0.01, ph: c + j * 0.5 });
+      else if (what !== 'none') for (let c = 0; c < 2; c++) S2(o, what === 'snakes' ? 'snake' : 'flame', mw * (0.15 + c * 0.22), mj + 0.2, 0.16, -0.3, 0, 6, c ? 'a0' : 'a1', { sw: 1.5, ph: c, pv: [mw * (0.15 + c * 0.22), mj + 0.05] });
+      issue = false;
+      break;
+    }
+    case 'nested': {
+      const ty = pick(['wide', 'O', 'rect', 'sqm']); oneMouth(o, m, 0, my, ty, 1.15);
+      oneMouth(o, m, 0, my, pick(['wide', 'O', 'rect']), 0.5, 3); if (R() < 0.4) oneMouth(o, m, 0, my, 'O', 0.22, 6);
+      break;
+    }
+    case 'triple':
+      if (R() < 0.5) for (const k of [-1, 0, 1]) oneMouth(o, m, k * 0.17, my + Math.abs(k) * 0.02, pick(['wide', 'O', 'rect', 'smile']), 0.42);
+      else for (const k of [0, 1, 2]) oneMouth(o, m, 0, my - 0.07 + k * 0.11, pick(['wide', 'rect', 'frown']), 0.6 - k * 0.1);
+      break;
+    case 'mega': { const w = rnd(0.24, 0.34), h = rnd(0.18, 0.26), sh = pick(['trap', 'sq', 'rect']), p = sh === 'trap' ? { k: 0.6 } : PP(sh); a(sh, 0, my, w, h, 0, 6, 'lip', { p, mc: my }); a(sh, 0, my, w * 0.72, h * 0.7, 0, 6.5, 'black', { p, mc: my }); break; }
+    case 'grille': {
+      const w = rnd(0.28, 0.4), h = rnd(0.1, 0.16), n = 4 + Math.floor(R() * 5);
+      a(pick(['rect', 'sq']), 0, my, w * 1.12, h * 1.3, 0, 6, 'lip'); a('rect', 0, my, w, h, 0, 6.5, 'black');
+      for (let j = 0; j < n; j++) a('rect', (j - (n - 1) / 2) * w / n, my, w / n * 0.45, h * 0.86, 0, 8, 'tooth');
+      if (R() < 0.4) a('rect', 0, my, w, h * 0.12, 0, 8.1, 'tooth');
+      issue = false;
+      break;
+    }
+    case 'eight': {
+      S2(o, 'ellipse', 0.085, my, 0.2, 0.16, 0, 6, 'lip', M); S2(o, 'ellipse', 0.085, my, 0.14, 0.1, 0, 6.5, 'cavity', M);
+      if (R() < 0.5) a(pick(['capsule', 'drop']), 0, my + 0.1, 0.09, 0.2, 0, 8.4, 'tongue', { sw: 0.6, pv: [0, my] });
+      break;
+    }
+    case 'bar': a('rect', 0, my, rnd(0.2, 0.4), rnd(0.025, 0.05), 0, 6.5, 'cavity'); issue = false; break;
+    case 'eyemouth': { const sh = pick(['ellipse', 'almond', 'sq']); a(sh, 0, my, 0.36, 0.22, 0, 6, 'lip'); a(sh, 0, my, 0.3, 0.17, 0, 6.5, 'black'); eye(o, m, 0, my, 0.065, eyeStyle(m), 9); issue = false; break; }
+    case 'facemouth': { const d = rnd(0.3, 0.38); a('ellipse', 0, my, d * 1.14, d * 1.14, 0, 6, 'lip'); a('ellipse', 0, my, d, d, 0, 6.5, 'black'); mini(o, 0, my, d * 0.66, 7, m, 'tongue'); issue = false; break; }
+    case 'lips': {
+      S2(o, 'ellipse', 0.065, my - 0.025, 0.16, 0.075, 0.15, 6, 'lip', M); a('bowl', 0, my + 0.005, 0.28, 0.09, 0, 6, 'lip'); a('almond', 0, my, 0.22, 0.035, 0, 6.5, 'black');
+      if (R() < 0.4) for (let j = 0; j < 4; j++) a('rect', (j - 1.5) * 0.035, my, 0.03, 0.025, 0, 8, 'tooth');
+      break;
+    }
+    case 'snarl': {
+      const mw = rnd(0.34, 0.5), mh = rnd(0.14, 0.2), p = { k: 0.6 };
+      a('trap', 0, my, mw, mh, 0, 6, 'lip', { p, mc: my }); a('trap', 0, my + mh * 0.06, mw * 0.8, mh * 0.72, 0, 6.5, 'cavity', { p, mc: my });
+      S2(o, 'trid', mw * 0.2, my - mh * 0.3 + mh * 0.35, 0.05, mh * 0.75, 0, 8.1, 'tooth', M);
+      if (R() < 0.5) a('rect', 0, my - mh * 0.2, mw * 0.3, mh * 0.2, 0, 8, 'tooth2');
+      break;
+    }
+    case 'none': issue = false; break;
+    default: oneMouth(o, m, 0, my, t, 1);
+  }
+  if (issue) switch (wp(m, 'none:9|fire:1:medieval china|drool:.8:cartoon|leaves:.8:medieval')) {
+    case 'fire': for (let i = 0, n = pick([3, 4, 5]); i < n; i++) { const th = Math.PI + (i - (n - 1) / 2) * 0.35, len = rnd(0.2, 0.4); add(o, pc('flame', Math.sin(th) * len / 2, my - Math.cos(th) * len / 2, len * 0.4 * (i % 2 ? -1 : 1), len, th, 8.3, i % 2 ? 'a0' : 'a1', { sw: 2, sf: 3, ph: i, pv: [0, my] })); } break;
+    case 'drool': { const x = rnd(-0.1, 0.1); add(o, pc('rect', x, my + 0.07, 0.01, 0.1, 0, 8.3, 'a0')); add(o, pc('drop', x, my + 0.14, 0.035, 0.07, 0, 8.3, 'a0', { pul: 0.15 })); break; }
+    case 'leaves': for (const c of [0, 1]) S2(o, 'frond', 0.12 + c * 0.1, my + 0.06 + c * 0.08, 0.14, 0.3, 1.9 + c * 0.5, 8.3, c ? 'a1' : 'a0', { sw: 0.8, ph: c, pv: [0.1, my] }); break;
+  }
   return o;
 }
 
-/* colours by role, from a scheme that can change on its own */
+/* ---------- painted and scarred faces ---------- */
+function gMarks(m) {
+  const o = mk(), { w: hw, h: hh, top, bot } = m.head, a = (...q) => add(o, pc(...q));
+  for (let q = 0, n = pick([0, 1, 1, 1, 2, 2, 3]); q < n; q++) switch (wp(m, 'cheeks:2|kumadori:2:japan china|dots:1.5:africa amazon oceania carib|tearbands:1.2:andes carnival|forehead:2:india africa meso|scales:1.2:sea china india|spirals:1.5:oceania china meso|warts:1|scar:.8|stitches:1:skull cartoon|blush:1.5:anime|bandaid:.5:cartoon|stripes:1.5:africa carib amazon japan|vein:.6:anime|sweat:.6:anime|chin:1:oceania africa|spots:1:carib meso|tile:1.2:andes meso africa|ticks:1:japan anime|cracks:.7:skull medieval|face:.5:medieval')) {
+    case 'cheeks': { const d = rnd(0.08, 0.16); S2(o, pick(['ellipse', 'ellipse', 'spiral', 'star', 'heart', 'diamond', 'cross', 'sq']), hw * rnd(0.25, 0.35), rnd(0.06, 0.16), d, d, 0, 4, 'mark'); break; }
+    case 'kumadori': for (let j = 0, k = pick([2, 3]); j < k; j++) S2(o, 'crescent', hw * (0.2 + 0.07 * j), -0.02 + j * 0.1, 0.22, 0.1 * (j % 2 ? 1 : -1), 0.5 + j * 0.3, 3.5, j % 2 ? 'mark2' : 'mark', { p: { T: 0.3, q: 0.3 } }); break;
+    case 'dots': for (let row = 0, rows = pick([1, 2]), k = 5 + Math.floor(R() * 5); row < rows; row++) for (let i = 0; i < k; i++) { const x = (i - (k - 1) / 2) * hw * 0.7 / k; a('ellipse', x, top + hh * 0.12 + row * 0.045 + x * x * 0.6, 0.028, 0.028, 0, 3.6, row ? 'mark2' : 'mark'); } break;
+    case 'tearbands': S2(o, pick(['rect', 'snake', 'capsule', 'trid']), hw * rnd(0.2, 0.28), 0.14, rnd(0.03, 0.06), rnd(0.2, 0.34), 0, 3.5, 'mark'); break;
+    case 'forehead': { const s = rnd(0.06, 0.11); a(pick(['diamond', 'ellipse', 'crescent', 'drop', 'star', 'almondV', 'cross', 'tri', 'spiral', 'flame']), 0, top + hh * rnd(0.1, 0.16), s, s * rnd(1, 1.5), 0, 4.4, 'orn', { pul: 0.06 }); break; }
+    case 'scales': { const y0 = R() < 0.5 ? bot - hh * 0.2 : top + hh * 0.1; for (let j = 0; j < 3; j++) for (let i = 0, k = 4 - (j % 2); i < k; i++) a('semi', (i - (k - 1) / 2) * 0.07, y0 + j * 0.035, 0.07, 0.045, 0, 3.4 + j * 0.01, j % 2 ? 'mark2' : 'mark'); break; }
+    case 'spirals': { const s = rnd(0.12, 0.2); S2(o, 'spiral', hw * rnd(0.22, 0.32), rnd(0, 0.18), s, s, 0, 3.6, 'mark'); if (R() < 0.4) a('spiral', 0, bot - hh * 0.12, s * 0.7, s * 0.7, 0, 3.6, 'mark'); break; }
+    case 'warts': for (let i = 0, k = 2 + Math.floor(R() * 4); i < k; i++) { const r = rnd(0.012, 0.03); S2(o, 'ellipse', rnd(0.05, hw * 0.36), rnd(-0.3, 0.32), r * 2, r * 2, 0, 4.2, 'mark2'); } break;
+    case 'scar': a('rect', rnd(-0.2, 0.2), rnd(-0.3, 0.3), rnd(0.25, 0.45), 0.016, rnd(-1.2, 1.2), 9.7, 'white'); break;
+    case 'stitches': { const y = top + hh * 0.12, w = hw * 0.5, k = 5 + Math.floor(R() * 4); a('rect', 0, y, w, 0.012, 0, 4.4, 'brow'); for (let i = 0; i < k; i++) a('rect', (i - (k - 1) / 2) * w / k, y, 0.012, 0.05, 0, 4.4, 'brow'); break; }
+    case 'blush': if (R() < 0.6) S2(o, 'ellipse', hw * 0.3, 0.12, 0.14, 0.07, 0, 4, 'mark'); else for (let j = 0; j < 3; j++) S2(o, 'rect', hw * 0.26 + j * 0.03, 0.12, 0.012, 0.06, 0.5, 4, 'mark'); break;
+    case 'bandaid': { const x = hw * 0.28 * pick([-1, 1]); a('sq', x, 0.1, 0.14, 0.045, 0.6, 4.4, 'tooth'); a('sq', x, 0.1, 0.14, 0.045, -0.6, 4.4, 'tooth'); break; }
+    case 'stripes': for (let i = 0, k = 3 + Math.floor(R() * 4); i < k; i++) { const y = top + hh * (0.18 + 0.68 * i / (k - 1)), wv = hw * 0.9 * Math.sqrt(Math.max(0.1, 1 - Math.pow((y - 0.02) / (hh / 2), 2))); a('rect', 0, y, wv, rnd(0.025, 0.05), 0, 3, i % 2 ? 'mark2' : 'mark'); } break;
+    case 'vein': a('cross', hw * 0.3 * pick([-1, 1]), top + hh * 0.15, 0.08, 0.08, 0.4, 4.4, 'mark', { pul: 0.2 }); break;
+    case 'sweat': a('drop', hw * 0.36 * pick([-1, 1]), top + hh * 0.2, 0.05, 0.09, 0, 4.4, 'a0', { sway: 0.004, ph: 2 }); break;
+    case 'chin': for (let i = 0, k = pick([3, 5]); i < k; i++) a('rect', (i - (k - 1) / 2) * 0.04, bot - hh * 0.1, 0.012, 0.1, 0, 3.6, 'mark'); break;
+    case 'spots': for (let i = 0, k = 6 + Math.floor(R() * 9); i < k; i++) { const s = rnd(0.02, 0.07); a('ellipse', rnd(-0.4, 0.4) * hw, 0.02 + rnd(-0.42, 0.42) * hh, s, s, 0, 3.3, i % 2 ? 'mark2' : 'mark'); } break;
+    case 'tile': tiles(o, 0, top + hh * 0.14, hw * 0.6, 0.07, pick([5, 6, 7]), 1, 4.3); break;
+    case 'ticks': for (const j of [-1, 0, 1]) S2(o, 'rect', hw * 0.3, 0.1 + j * 0.035, 0.1, 0.012, j * 0.25, 4, 'mark'); break;
+    case 'cracks': a('bolt', rnd(-0.2, 0.2) * hw, top + hh * 0.15, 0.06, 0.2, rnd(-0.5, 0.5), 3.5, 'black'); break;
+    case 'face': mini(o, 0, R() < 0.6 ? top + hh * 0.14 : bot - hh * 0.1, 0.16, 4.4, m, 'h2'); break;
+  }
+  return o;
+}
+
+/* ---------- below: beards, tentacles, collars, necks, other heads ---------- */
+function gExtras(m) {
+  const o = mk(), { w: hw, h: hh, bot } = m.head, a = (...q) => add(o, pc(...q));
+  switch (wp(m, 'none:5|tent:1.5:sea alien|goatee:1:greek medieval|braid:1:greek meso|bflames:1:tibet bali japan|fringe:1.2:china bali|curls:1:greek india|bspikes:1:medieval|ruff:1.5:carnival|collar:1.2:meso andes amazon|beads:1.2:india africa amazon tibet|neck:1.5|heads:.8:india')) {
+    case 'tent': { const n = 3 + Math.floor(R() * 4), sp = rnd(0.07, 0.1); for (let c = 0; c < n; c++) { const x0 = (c - (n - 1) / 2) * sp; for (let k = 0; k < 5; k++) { const r = 0.05 * (1 - k * 0.15); a('ellipse', x0 * (1 + k * 0.15), hh / 2 - 0.06 + k * 0.07, r * 2, r * 2, 0, 1.5 - k * 0.01, (c + k) % 2 ? 'top2' : 'hc', { sway: k * 0.014, ph: c * 0.9 + k * 0.6 }); } } break; }
+    case 'goatee': { const h = rnd(0.15, 0.3), ty = pick(['trid', 'drop', 'flame', 'capsule', 'almondV']); a(ty, 0, bot + h * 0.4, rnd(0.1, 0.18), ty === 'drop' ? -h : h, 0, 1.5, 'top', { sw: 0.6, pv: [0, bot] }); break; }
+    case 'braid': for (let j = 0, k = pick([4, 5, 6]); j < k; j++) a(pick(['rect', 'ellipse', 'sq']), 0, bot + (j + 0.3) * 0.06, 0.14 * (1 - j * 0.1), 0.055, 0, 1.5, j % 2 ? 'top2' : 'top', { sway: j * 0.008, ph: j * 0.5 }); break;
+    case 'bflames': for (let i = 0, n = pick([5, 7]); i < n; i++) { const th = Math.PI + (i - (n - 1) / 2) * 0.4, len = rnd(0.15, 0.3), [x, y] = radial(m, th, len * 0.7, 0.95); a('flame', x, y, len * 0.4 * (i % 2 ? -1 : 1), len, th, 1.5, i % 2 ? 'top2' : 'top', { sw: 1.5, ph: i, pv: radial(m, th, 0, 0.95) }); } break;
+    case 'fringe': for (let i = 0, n = 9 + 2 * Math.floor(R() * 5); i < n; i++) { const x = (i - (n - 1) / 2) * hw * 0.7 / n, len = rnd(0.12, 0.22), y = bot + len / 2 - 0.03 - Math.abs(x) * 0.3; a('rect', x, y, 0.014, len, 0, 1.5, i % 2 ? 'top2' : 'top', { sw: 1, sf: 2, ph: i * 0.4, pv: [x, y - len / 2] }); } break;
+    case 'curls': for (let j = 0; j < 3; j++) for (let i = 0, k = 5 - j; i < k; i++) a('ellipse', (i - (k - 1) / 2) * 0.075, bot + j * 0.065 + 0.01, 0.07, 0.07, 0, 1.5, (i + j) % 2 ? 'top2' : 'top'); break;
+    case 'bspikes': for (let i = 0, n = 5 + 2 * Math.floor(R() * 3); i < n; i++) { const th = Math.PI + (i / (n - 1) - 0.5) * 1.8, h = rnd(0.1, 0.22), [x, y] = radial(m, th, h * 0.4, 1); a('tri', x, y, rnd(0.05, 0.09), h, th, 1.5, 'top', { sway: 0.01, ph: i * 0.7 }); } break;
+    case 'ruff': { const n = 9 + 2 * Math.floor(R() * 4), ty = pick(['tri', 'almondV', 'semi', 'drop']), len = rnd(0.14, 0.22); for (let i = 0; i < n; i++) { const th = Math.PI - 1.1 + 2.2 * i / (n - 1), [x, y] = radial(m, th, len * 0.6, 1); a(ty, x, y, len * 0.55, len, th, 1.3, i % 2 ? 'a0' : 'a1'); } break; }
+    case 'collar': {
+      const w = hw * rnd(0.9, 1.3);
+      a('bowl', 0, bot + 0.08, w, 0.22, 0, 1.2, 'orn');
+      for (let i = 0, k = pick([5, 7]); i < k; i++) { const u = (i - (k - 1) / 2) / k; a(pick(['ellipse', 'diamond']), u * w * 0.8, bot + 0.04 + 0.13 * (1 - 4 * u * u), 0.04, 0.04, 0, 1.25, 'a0'); }
+      if (R() < 0.5) for (const k of [-1, 0, 1]) dangle(o, k * w * 0.2, bot + 0.17 - Math.abs(k) * 0.04, 2, 0.045, 1.22, k);
+      break;
+    }
+    case 'beads': {
+      const n = 9 + 2 * Math.floor(R() * 4), s = rnd(0.045, 0.06);
+      for (let i = 0; i < n; i++) { const u = 2 * i / (n - 1) - 1; a('ellipse', u * (n - 1) / 2 * s * 1.05, bot + 0.03 + 0.12 * (1 - u * u), s, s, 0, 1.4, i % 2 ? 'a0' : 'a1'); }
+      a(pick(['diamond', 'drop', 'star', 'ellipse', 'heart', 'tri']), 0, bot + 0.22, 0.09, 0.11, 0, 1.45, 'orn', { sw: 1.2, pv: [0, bot + 0.15] });
+      break;
+    }
+    case 'neck': a(pick(['rect', 'trap']), 0, bot + 0.1, hw * rnd(0.3, 0.5), 0.28, 0, 1.2, 'h2'); if (R() < 0.6) a(pick(['semi', 'trap', 'sq']), 0, bot + 0.32, hw * rnd(1.3, 1.8), 0.22, 0, 1.15, 'h3'); break;
+    case 'heads': { let x = hw / 2, s = rnd(0.2, 0.28); for (let j = 0, k = pick([1, 2, 3, 4]); j < k; j++) { x += s * 0.42; for (const sg of [-1, 1]) mini(o, sg * x, 0.06 + j * 0.02, s, 1.2 - j * 0.01, m, j % 2 ? 'h2' : 'hc'); x += s * 0.42; s *= 0.82; } break; }
+  }
+  return o;
+}
+
+/* colours by role, from a scheme that can change on its own; sometimes only one or two colours */
 function scheme() {
+  const r = R(), h1 = pick(HUES), h2 = pick(HUES.filter(c => c !== h1));
+  const pal = r < 0.55 ? LIGHT.slice() : r < 0.8 ? [h1, h2, 'white'] : r < 0.93 ? [h1, 'white'] : [h1, h2];
+  const X = (...ex) => { let c = pal.filter(v => !ex.includes(v)); if (!c.length) c = LIGHT.filter(v => !ex.includes(v)); return c.length ? pick(c) : 'white'; };
   const s = {};
-  s.hc = pick(['red', 'yellow', 'blue', 'red', 'yellow', 'blue', 'white']);
-  s.h2 = pick(not(s.hc)); s.h3 = pick(not(s.hc, s.h2));
-  s.top = pick(not(s.hc)); s.top2 = R() < 0.5 ? s.top : pick(not(s.hc, s.top)); s.earIn = pick(not(s.top));
-  s.socket = R() < 0.6 ? 'black' : pick(not(s.hc));
-  s.ball = s.socket === 'white' ? 'yellow' : pick(['white', 'white', 'yellow']);
-  if (s.ball === s.socket || s.ball === s.hc && s.socket === 'black' && R() < 0.5) s.ball = s.ball === 'white' ? 'yellow' : 'white';
-  s.iris = pick(HUES.filter(c => c !== s.ball));
-  s.pupilIn = pick(['white', 'yellow'].filter(c => c !== s.iris));
-  s.brow = R() < 0.6 ? 'black' : pick(not(s.hc));
-  s.nose = pick(not(s.hc));
-  s.lip = pick(not(s.hc));
+  s.hc = pick(pal); s.h2 = X(s.hc); s.h3 = X(s.hc, s.h2);
+  s.top = X(s.hc); s.top2 = R() < 0.5 ? s.top : X(s.hc, s.top); s.earIn = X(s.top);
+  s.socket = R() < 0.6 ? 'black' : X(s.hc);
+  const bc = ['white', 'white', 'yellow'].filter(c => c !== s.socket && c !== s.hc); s.ball = bc.length ? pick(bc) : X(s.socket, s.hc);
+  s.iris = pick(HUES.filter(c => c !== s.ball)); s.pupilIn = pick(['white', 'yellow'].filter(c => c !== s.iris));
+  s.brow = R() < 0.6 ? 'black' : X(s.hc);
+  s.nose = X(s.hc); s.lip = X(s.hc);
   s.cavity = R() < 0.85 ? 'black' : pick(HUES.filter(c => c !== s.lip && c !== s.hc).concat(['black']));
   s.tongue = pick(HUES.filter(c => c !== s.lip && c !== s.cavity));
   s.tooth = R() < 0.8 ? 'white' : 'yellow'; s.tooth2 = R() < 0.7 ? s.tooth : (s.tooth === 'white' ? 'yellow' : 'white');
-  s.cheek = pick(not(s.hc)); s.wart = pick(not(s.hc)); s.tent2 = pick(not(s.hc));
+  s.mark = X(s.hc); s.mark2 = R() < 0.5 ? 'black' : X(s.hc, s.mark);
+  s.halo = X(s.hc, s.top); s.halo2 = X(s.halo);
+  s.orn = R() < 0.5 && s.hc !== 'yellow' ? 'yellow' : X(s.hc); s.orn2 = X(s.orn);
+  const A = shuffle(pal.concat(['black']).filter((c, i, arr) => arr.indexOf(c) === i)); while (A.length < 3) A.push(pick(LIGHT));
+  s.a0 = A[0]; s.a1 = A[1]; s.a2 = A[2];
   return s;
 }
-const ROLE = {
-  head0: s => s.hc, head1: s => s.h2, head2: s => s.h3, jaw: s => s.h2,
-  horn: s => s.top, spike1: s => s.top, spike2: s => s.top2, ear: s => s.top, earIn: s => s.earIn, antStalk: s => s.top2, antTip: s => s.top,
-  socket: s => s.socket, ball: s => s.ball, iris: s => s.iris, pupil: () => 'black', pupilIn: s => s.pupilIn, hl: () => 'white', lid: s => s.hc,
-  brow: s => s.brow, hole: () => 'black', beak: s => s.nose,
-  lip: s => s.lip, cavity: s => s.cavity, tongue: s => s.tongue, tooth: s => s.tooth, tooth2: s => s.tooth2,
-  cheek: s => s.cheek, wart: s => s.wart, tent1: s => s.hc, tent2: s => s.tent2, beard: s => s.top, scar: () => 'white'
-};
+const SKEYS = [null, ['hc', 'h2', 'h3'], ['top', 'top2', 'earIn', 'halo', 'halo2'], ['socket', 'ball', 'iris', 'pupilIn'], ['lip', 'cavity', 'tongue', 'tooth', 'tooth2'], ['nose', 'brow', 'mark', 'mark2'], ['orn', 'orn2', 'a0', 'a1', 'a2']];
 
-const GROUPS = ['head', 'top', 'eyes', 'brows', 'nose', 'mouth', 'extras'];
-const GEN = { head: gHead, top: gTop, eyes: gEyes, brows: gBrows, nose: gNose, mouth: gMouth, extras: gExtras };
-function finish(m, k, g) { for (const id in g) { const p = g[id]; p.g = k; p.pts = outline(p.type, p.p); } m.g[k] = g; }
+const GROUPS = ['back', 'head', 'side', 'top', 'marks', 'eyes', 'brows', 'nose', 'mouth', 'extras'];
+const GEN = { back: gBack, head: gHead, side: gSide, top: gTop, marks: gMarks, eyes: gEyes, brows: gBrows, nose: gNose, mouth: gMouth, extras: gExtras };
+const FEAT = new Set(['eyes', 'brows', 'nose', 'mouth']);
+const HEADDEP = ['back', 'side', 'top', 'marks', 'extras'];
+// scale a piece by s about (px,py), then move it by (ox,oy)
+function tf(q, s, ox, oy, px, py) {
+  const X = x => px + (x - px) * s + ox, Y = y => py + (y - py) * s + oy;
+  q.x = X(q.x); q.y = Y(q.y); q.w *= s; q.h *= s;
+  if (q.ec) q.ec = [X(q.ec[0]), Y(q.ec[1])];
+  if (q.pv) q.pv = [X(q.pv[0]), Y(q.pv[1])];
+  if (q.mc !== undefined) q.mc = Y(q.mc);
+  if (q.gaze) q.gaze *= s;
+  if (q.sway) q.sway *= s;
+}
+function gen(m, k) {
+  const one = () => GEN[k](m);
+  if (!m.twin) m.raw[k] = one();
+  else if (k === 'eyes') { const a = one(), ea = m.eyes, b = one(); m.eyes2 = [ea, m.eyes]; m.raw[k] = [a, b]; }
+  else if (k === 'brows') { const e = m.eyes2 || [m.eyes, m.eyes]; m.eyes = e[0]; const a = one(); m.eyes = e[1]; m.raw[k] = [a, one()]; }
+  else if (k === 'nose' || k === 'mouth') m.raw[k] = [one(), one()];
+  else { const a = one(); m.raw[k] = [a, a]; }
+  place(m, k);
+}
+function place(m, k) {
+  const raw = m.raw[k], F = FEAT.has(k), out = {}, dbl = m.dbl && (k === 'nose' || k === 'mouth');
+  const put = (g, pre, s, ox, ds, dx) => {
+    for (const id in g) {
+      const q = Object.assign({}, g[id]);
+      if (ds) tf(q, ds, dx, 0, 0, 0.2);
+      if (F) {
+        tf(q, m.fk, 0, m.fy, 0, 0.08);
+        if (m.tilt && k === 'mouth') { const c = Math.cos(m.tilt), sn = Math.sin(m.tilt), X = q.x, Y = q.y - 0.25; q.x = X * c - Y * sn + m.off; q.y = 0.25 + X * sn + Y * c; q.r += m.tilt; }
+        if (m.off && k === 'nose') q.x -= m.off;
+      }
+      if (s !== 1) tf(q, s, ox, 0, 0, 0.02);
+      if (q.type === 'capsule' && !q.p) q.p = capP(q.w, q.h);
+      q.g = k; q.pts = outline(q.type, q.p);
+      out[pre + k + id] = q;
+    }
+  };
+  const each = (g, pre, s, ox) => { if (dbl) { put(g, pre + 'l', s, ox, 0.72, -0.15); put(g, pre + 'r', s, ox, 0.72, 0.15); } else put(g, pre, s, ox, 0, 0); };
+  if (m.twin) { each(raw[0], 'A', 0.62, -0.38); each(raw[1], 'B', 0.62, 0.38); } else each(raw, '', 1, 0);
+  m.g[k] = out;
+}
 // most of the time the shapes are bare coloured card; now and then a thin edge: black, white, or of many colours
 function lineStyle() { const r = R(); return r < 0.7 ? 'none' : r < 0.82 ? 'black' : r < 0.92 ? 'white' : 'mix'; }
 function paint(m) {
+  m.s.lid = m.s.hc;
   for (const k of GROUPS) for (const id in m.g[k]) {
-    const p = m.g[k][id]; p.col = ROLE[p.role](m.s);
+    const p = m.g[k][id]; p.col = m.s[p.role] || p.role;
     p.lc = m.ls === 'mix' ? pick(Object.keys(COL).filter(c => c !== p.col)) : null;
   }
+  // the ground never takes the colour of the head, of what is on top of it, or of what stands behind it
+  const av = new Set([m.s.hc, m.s.top]);
+  if (m.dark) av.add('black');
+  for (const id in m.g.back) if (av.size < 4) av.add(m.g.back[id].col);
+  m.avoid = [...av];
 }
-function newMonster() {
-  const m = { g: {}, s: scheme(), ls: lineStyle() };
-  for (const k of GROUPS) finish(m, k, GEN[k](m));
+function newMonster(prev) {
+  const m = { g: {}, raw: {}, s: scheme(), ls: lineStyle(), th: shuffle(TH.slice()).slice(0, pick([1, 2, 2, 2, 3])), twin: R() < 0.04, fk: 1, fy: 0, tilt: 0, off: 0 };
+  if (prev && R() < 0.5) m.th[0] = pick(prev.th);          // something of the monster before stays
+  if (m.th.includes('cubist') ? R() < 0.7 : R() < 0.05) { m.tilt = rnd(-0.3, 0.3); m.off = rnd(-0.07, 0.07); }
+  for (const k of ['head', 'back', 'side', 'top', 'marks', 'eyes', 'brows', 'nose', 'mouth', 'extras']) gen(m, k);
   paint(m);
   return m;
 }
-// the monster never stops changing
+// the monster never stops changing: a feature, a colour, a reference at a time
 function mutate(m) {
-  const r = R(), regen = k => finish(m, k, GEN[k](m));
-  if (r < 0.22) {                                        // colours move
-    const ns = scheme(), keys = pick([Object.keys(ns), ['hc', 'h2', 'h3'], ['top', 'top2', 'earIn'], ['socket', 'ball', 'iris', 'pupilIn'], ['lip', 'cavity', 'tongue', 'tooth', 'tooth2'], ['nose', 'brow', 'cheek', 'wart', 'tent2']]);
-    for (const k of keys) m.s[k] = ns[k];
-  }
-  else if (r < 0.38) { regen('eyes'); regen('brows'); }
-  else if (r < 0.53) regen('mouth');
-  else if (r < 0.65) regen('top');
-  else if (r < 0.74) regen('nose');
-  else if (r < 0.8) regen('brows');
-  else if (r < 0.9) { regen('head'); regen('top'); regen('extras'); }
-  else regen('extras');
+  const regen = k => gen(m, k);
+  const one = () => {
+    const r = R();
+    if (r < 0.16) { const ns = scheme(), keys = pick(SKEYS) || Object.keys(ns); for (const k of keys) m.s[k] = ns[k]; }
+    else if (r < 0.30) { regen('eyes'); regen('brows'); place(m, 'nose'); place(m, 'mouth'); }
+    else if (r < 0.43) regen('mouth');
+    else if (r < 0.52) regen('top');
+    else if (r < 0.59) regen('nose');
+    else if (r < 0.63) regen('brows');
+    else if (r < 0.69) regen('side');
+    else if (r < 0.76) regen('back');
+    else if (r < 0.84) regen('marks');
+    else if (r < 0.90) regen('extras');
+    else { regen('head'); for (const k of HEADDEP) regen(k); for (const k of FEAT) place(m, k); }
+  };
+  if (R() < 0.15) m.th[Math.floor(R() * m.th.length)] = pick(TH);   // the references drift
+  one(); if (R() < 0.25) one();
   if (R() < 0.1) m.ls = lineStyle();
   paint(m);
 }
@@ -492,16 +1253,36 @@ const blinkOf = (ex) => {
   return u > 0 && u < 1 ? 1 - 0.92 * Math.sin(Math.PI * u) : 1;
 };
 
+/* ================= the frame follows the monster: it always fits, whatever grows on it ================= */
+const cam = { s: 0, x: 0, y: 0, ts: 0, tx: 0, ty: 0 };
+function fit(now) {
+  let x0 = -0.5, x1 = 0.5, y0 = -0.55, y1 = 0.6;
+  for (const id in T) {
+    const p = T[id], hx = p.r ? Math.max(Math.abs(p.w), Math.abs(p.h)) / 2 : Math.abs(p.w) / 2, hy = p.r ? hx : Math.abs(p.h) / 2;
+    x0 = Math.min(x0, p.x - hx); x1 = Math.max(x1, p.x + hx); y0 = Math.min(y0, p.y - hy); y1 = Math.max(y1, p.y + hy);
+  }
+  cam.ts = Math.min(W / ((x1 - x0) * 1.12), H / ((y1 - y0) * 1.1), H / 1.4, W / 1.08);
+  cam.tx = (x0 + x1) / 2; cam.ty = (y0 + y1) / 2;
+  if (now || !cam.s) { cam.s = cam.ts; cam.x = cam.tx; cam.y = cam.ty; }
+}
+function camera(dt) {
+  if (!cam.s) return;
+  const k = 1 - Math.exp(-dt * 0.9 * Math.max(0.6, cur.tempo));
+  cam.s += (cam.ts - cam.s) * k; cam.x += (cam.tx - cam.x) * k; cam.y += (cam.ty - cam.y) * k;
+  S = cam.s; CX = W / 2 - cam.x * S; CY = H / 2 - cam.y * S;
+}
+
 /* ================= the ground changes colour too ================= */
 const BGS = ['black', 'red', 'yellow', 'blue', 'white'];
 const bg = { shown: 'black', next: 10 };
 function bgUpdate(t) {
   if (!M) return;
-  const avoid = [M.s.hc, M.s.top];                   // never the colour of the head or of the horns: the monster must stand out
+  const avoid = M.avoid || [M.s.hc, M.s.top];        // the monster must stand out
   const clash = avoid.includes(bg.shown);
   if (t < bg.next && !clash) return;
   const md = MOODS[mood], tempo = Math.max(0.4, cur.tempo);
   const options = BGS.filter(c => !avoid.includes(c) && c !== bg.shown);
+  if (!options.length) { bg.next = t + 2; return; }
   bg.shown = bg.shown !== 'black' && !avoid.includes('black') && R() < 0.25 ? 'black' : pick(options);   // a dry cut
   if (md.beat) { const P = 60 / bpm; bg.next = beat0 + (Math.floor((t - beat0) / P) + pick([4, 8, 8, 16])) * P; }
   else bg.next = t + rnd(4, 15) / tempo;
@@ -521,18 +1302,25 @@ function piecePath(d, x, y, w, h, r) {
 function drawPiece(d, t) {
   let x = d.x, y = d.y, w = d.w * d.s, h = d.h * d.s, r = d.r;
   const m = d.meta || {};
-  switch (d.g) {
-    case 'head': { const k = Lf.hs; x *= k; y = 0.02 + (y - 0.02) * k; w *= k; h *= k; break; }
-    case 'eyes': {
-      if (m.gaze) { x += Lf.gx * m.gaze * 0.42; y += Lf.gy * m.gaze * 0.32; }
-      if (m.blink && m.ec) { const b = blinkOf(m.ec[0]); y = m.ec[1] + (y - m.ec[1]) * b; h *= b; }
-      break;
-    }
-    case 'mouth': if (m.mc !== undefined) { const k = Lf.mouth; y = m.mc + (y - m.mc) * k; h *= k; } break;
-    case 'top': r += (m.sgn || 1) * cur.sway * Math.sin(ft * 1.1 + (m.ph || 0)); break;
-    case 'nose': { const k = 1 + 0.04 * Math.sin(ft * 1.7); w *= k; h *= k; break; }
-    case 'extras': if (m.sway) x += Math.sin(ft * 1.6 + m.ph) * m.sway * cur.tent; break;
+  if (d.g === 'head') { const k = Lf.hs; x *= k; y = 0.02 + (y - 0.02) * k; w *= k; h *= k; if (m.jw) y += (Lf.mouth - 1) * 0.12; }
+  else if (d.g === 'nose') { const k = 1 + 0.04 * Math.sin(ft * 1.7); w *= k; h *= k; }
+  if (m.gaze) {
+    let gx = Lf.gx, gy = Lf.gy;
+    if (m.gph) { gx = cur.gaze * 0.9 * Math.sin(ft * 0.53 + m.gph * 2.1); gy = cur.gaze * 0.7 * Math.sin(ft * 0.41 + m.gph * 3.7); }   // each eye on its own
+    if (m.gb) { gx = gx * 0.4 + m.gb[0]; gy = gy * 0.4 + m.gb[1]; }
+    x += gx * m.gaze * 0.42; y += gy * m.gaze * 0.32;
   }
+  if (m.blink && m.ec) { const b = blinkOf(m.ec[0]); y = m.ec[1] + (y - m.ec[1]) * b; h *= b; }
+  if (m.mc !== undefined) { const k = Lf.mouth; y = m.mc + (y - m.mc) * k; h *= k; }
+  if (m.sw) {
+    const a = (m.sgn || 1) * m.sw * cur.sway * Math.sin(ft * (m.sf || 1.1) + (m.ph || 0));
+    if (m.pv) { const c = Math.cos(a), sn = Math.sin(a), dx = x - m.pv[0], dy = y - m.pv[1]; x = m.pv[0] + dx * c - dy * sn; y = m.pv[1] + dx * sn + dy * c; }
+    r += a;
+  }
+  if (m.orb) { const a = ft * m.orb, c = Math.cos(a), sn = Math.sin(a), dx = x - m.pv[0], dy = y - m.pv[1]; x = m.pv[0] + dx * c - dy * sn; y = m.pv[1] + dx * sn + dy * c; r += a; }
+  if (m.sway) x += Math.sin(ft * 1.6 + (m.ph || 0)) * m.sway * cur.tent;
+  if (m.spin) r += ft * m.spin;
+  if (m.pul) { const k = 1 + m.pul * Math.sin(ft * 2.3 + (m.ph || 0)); w *= k; h *= k; }
   const fs = Lf.fs, fc = Math.cos(Lf.rot), fsn = Math.sin(Lf.rot);
   const X0 = x * fs, Y0 = y * fs;
   const cx = CX + (X0 * fc - Y0 * fsn + Lf.dx) * S, cy = CY + (X0 * fsn + Y0 * fc + Lf.dy) * S;
@@ -571,18 +1359,19 @@ function frame() {
     else setMood(pick(Object.keys(MOODS).filter(k => k !== mood)), t);
   }
   if (!M) {
-    M = newMonster(); T = targetsOf(M);
+    M = newMonster(); T = targetsOf(M); fit(true);
     retarget(t + 0.4, { dur: [2.5, 4], stagger: 2, eases: ['outBack', 'inOutSine'], pattern: ['out'] });
     mutNext = t + 4;
   } else if (t >= mutNext) {
     const md = MOODS[mood];
-    if (R() < md.full) { const ls = M.ls; M = newMonster(); if (R() < 0.7) { M.ls = ls; paint(M); } }
+    if (R() < md.full) { const ls = M.ls; M = newMonster(M); if (R() < 0.7) { M.ls = ls; paint(M); } }
     else mutate(M);
-    T = targetsOf(M);
+    T = targetsOf(M); fit();
     retarget(t, md);
     mutNext = nextMutTime(t);
   }
   life(t, dt);
+  camera(dt);
   update(t);
   bgUpdate(t);
   render(t);
@@ -628,7 +1417,7 @@ const wake = () => { document.body.classList.remove('idle'); clearTimeout(idleTo
 addEventListener('mousemove', wake); wake();
 
 // for inspection from the console
-window.MONSTRUM = { disp, get M() { return M; }, get mood() { return mood; }, setMood: m => setMood(m, now()), next: () => { mutNext = 0; }, photo, bg };
+window.MONSTRUM = { disp, get M() { return M; }, get mood() { return mood; }, setMood: m => setMood(m, now()), next: () => { mutNext = 0; }, photo, bg, newMonster, mutate, COL, set: mm => { M = mm; T = targetsOf(M); fit(); retarget(now(), MOODS[mood]); } };
 })();
 </script>
 </body>
