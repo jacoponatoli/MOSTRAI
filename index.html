@@ -26,7 +26,7 @@
 <aside id="info">
   <h1>MOSTRAI</h1>
   <p>A single monstrous face, always new.</p>
-  <p>Its genome mixes a bestiary: strange, monstrous and ordinary animals (anglerfish, bats, mandrills, star-nosed moles, axolotls, spiders, mantises, octopuses, lampreys), plants and fungi (flytraps, rafflesia, lotus pods, cordyceps, mandrakes), and sculpture (Brancusi, Moore, Calder, Giacometti, Fontana). Sometimes it turns into pure geometry. It insists on what makes a face frightening: eyes with too much white or none at all, sunken sockets, mouths cut too wide, jaws hanging too long, faces too long, features sliding or upside down, stillness and then a snap. It watches you.</p>
+  <p>Its genome mixes a bestiary: strange, monstrous and ordinary animals (anglerfish, bats, mandrills, star-nosed moles, axolotls, spiders, mantises, octopuses, lampreys), plants and fungi (flytraps, rafflesia, lotus pods, cordyceps, mandrakes), and sculpture (Brancusi, Moore, Calder, Giacometti, Fontana). Sometimes it turns into pure geometry. It insists on what makes a face frightening: eyes with too much white or none at all, sunken sockets, mouths cut too wide, jaws hanging too long, faces too long, features sliding or upside down, stillness and then a snap. Other voices enter the flow: Francis Bacon, Giulia Cenci, vampires and stitched creatures of novels, films and comics, frightening clowns, strange children, the man with the growths, the devils of medieval frescoes, gargoyles, the demons of anime, zombies; masculine, feminine and queer signs worn together; the opened body of Monique Wittig's <i>Le corps lesbien</i>. Tongues, teeth, bones, gills, wounds, mucus, smoke. Sometimes the monster is only lines. It watches you.</p>
   <p>The machine invents a monster and never stops changing it: a face made of geometric shapes in the three primary colours, white and black, on a ground that changes colour too. It mixes the grammar of many monsters without copying any: Mesoamerican and Andean masks, Amazonian feather crowns, Caribbean carnival, the demon faces of India, Sri Lanka and Bali, Himalayan masks, oni and yokai, anime, taotie and opera faces, African and Oceanic masks, gorgons, medieval grotesques, commedia and carnival, skulls, cartoons, robots, aliens, insects, sea creatures, cubism, Miró, the Bauhaus, pixels, the first idols. Eyes, horns, crowns, teeth, tongues, beaks, ears and tentacles are reinvented at every moment, while the face breathes, blinks, looks around, chews and sways, at ever-changing speeds and rhythms.</p>
   <p><i>monstrum</i>: from <i>monere</i>, to warn. Cicero heard in it <i>monstrare</i>, to show.</p>
   <p>A project by Jacopo Natoli, 2026</p>
@@ -134,6 +134,12 @@ function dense(type, p) {
     case 'pie': { const a = p && p.a || 0.9; P.push([0, 0]); arc(0, 0, 0.5, 0.5, a / 2, TAU - a / 2, 80); break; }
     case 'key': arc(0, -0.15, 0.35, 0.35, Math.PI * 0.75, Math.PI * 2.25, 60); P.push([0.25, 0.5], [-0.25, 0.5]); break;
     case 'bell': arc(0, -0.1, 0.32, 0.4, Math.PI, TAU, 50); quad(0.32, -0.1, 0.32, 0.35, 0.5, 0.5, 20); P.push([-0.5, 0.5]); quad(-0.5, 0.5, -0.32, 0.35, -0.32, -0.1, 20); nrm = true; break;
+    case 'bone': {
+      const sd = (x, y) => { let d = Math.max(Math.abs(x) - 0.36, Math.abs(y) - 0.09); for (const [cx, cy] of [[-0.36, -0.1], [-0.36, 0.1], [0.36, -0.1], [0.36, 0.1]]) d = Math.min(d, Math.hypot(x - cx, y - cy) - 0.12); return d; };
+      for (let i = 0; i < 180; i++) { const a = -Math.PI / 2 + i * TAU / 180, c = Math.cos(a), s = Math.sin(a); let r = 0.7; while (r > 0.01 && sd(r * c, r * s) > 0) r -= 0.004; P.push([r * c, r * s]); }
+      nrm = true; break;
+    }
+    case 'fork': poly([[-0.25, -0.5], [0.25, -0.5], [0.25, 0.2], [0.5, 0.5], [0.12, 0.5], [0, 0.3], [-0.12, 0.5], [-0.5, 0.5], [-0.25, 0.2]]); break;
     case 'egg': for (let i = 0; i < 120; i++) { const t = i * TAU / 120; P.push([0.42 * Math.cos(t) * (1 - 0.2 * Math.sin(t)), 0.5 * Math.sin(t)]); } nrm = true; break;
     default: arc(0, 0, 0.5, 0.5, -Math.PI / 2, 1.5 * Math.PI, 120);
   }
@@ -860,7 +866,7 @@ function oneMouth(o, m, cx, my, t, sc, zo) {
       a(ty || (top ? 'trid' : 'tri'), x, my + (top ? e0 + th / 2 : e1 - th / 2), tw * (wk || 0.95), th, 0, 8, j % 2 ? 'tooth2' : 'tooth');
     }
   };
-  const n = 4 + Math.floor(R() * 9), len = mh * rnd(0.3, 0.6);
+  const n = 4 + Math.floor(R() * 9) + (m.th.includes('dread') ? 4 + Math.floor(R() * 6) : 0), len = mh * rnd(0.3, 0.6);
   switch (style) {
     case 'row': row(n, true, len); break;
     case 'both': row(n, true, len); row(n + (R() < 0.5 ? 1 : -1), false, len * rnd(0.6, 1)); break;
@@ -984,6 +990,7 @@ function gMouth(m) {
     case 'drool': { const x = rnd(-0.1, 0.1); add(o, pc('rect', x, my + 0.07, 0.01, 0.1, 0, 8.3, 'a0')); add(o, pc('drop', x, my + 0.14, 0.035, 0.07, 0, 8.3, 'a0', { pul: 0.15 })); break; }
     case 'leaves': for (const c of [0, 1]) S2(o, 'frond', 0.12 + c * 0.1, my + 0.06 + c * 0.08, 0.14, 0.3, 1.9 + c * 0.5, 8.3, c ? 'a1' : 'a0', { sw: 0.8, ph: c, pv: [0.1, my] }); break;
   } }
+  if (m.th.includes('dread') && R() < 0.5) for (const id of Object.keys(o)) { const q = o[id]; if ((q.role === 'tooth' || q.role === 'tooth2') && R() < 0.22) add(o, pc('drop', q.x, q.y + Math.abs(q.h) * 0.45 + 0.012, 0.022, 0.036, 0, q.z + 0.01, 'weep', { mc: q.mc, rise: R() < 0.4 ? [rnd(0.15, 0.35), -0.12] : undefined, ph: R() })); }   // blood here and there
   return o;
 }
 
@@ -1100,6 +1107,8 @@ function refsFor() {
   const th = shuffle(TH.slice()).slice(0, pick([0, 1, 1, 2])).concat(shuffle(ANIMALS.slice()).slice(0, pick([1, 1, 2, 2, 3])));
   if (R() < 0.4) th.push(pick(PLANTS), 'plant');
   if (R() < 0.25) th.push(pick(SCULPT), 'geo');
+  if (R() < 0.45) th.push(pick(POP));
+  if (R() < 0.28) th.push(pick(GENDER));   // masculine, feminine, drag, queer signs worn together
   const r = R(); th.push(r < 0.76 ? 'dread' : r < 0.9 ? 'cute' : 'plain');
   return th;
 }
@@ -1374,6 +1383,127 @@ Object.assign(NEW.marks, {
   bleed(o, m) { const { w: hw, h: hh, top } = hd(m); for (let i = 0, n = 2 + Math.floor(R() * 4); i < n; i++) { const x = rnd(-0.3, 0.3) * hw, L = rnd(0.12, 0.45), y0 = top + hh * 0.5 * (1 - Math.sqrt(Math.max(0, 1 - Math.pow(x / (hw / 2), 2)))); add(o, pc('rect', x, y0 + L / 2, 0.02, L, 0, 4.46, 'weep')); add(o, pc('drop', x, y0 + L + 0.02, 0.04, 0.06, 0, 4.46, 'weep', { pul: 0.15, ph: i })); } }
 });
 
+
+/* ================= more references: painting, cinema, comics, frescoes, the undead, gender, Wittig =================
+   Francis Bacon (screaming smeared heads in cages), Giulia Cenci (fused casts, bones, fragments), the vampires and the
+   stitched creatures of novels, films and comics, the frightening clown, the strange children, the man with the growths,
+   the devils and hell-mouths of medieval frescoes, gargoyles, the demons of anime, zombies; masculine, feminine, drag,
+   trans and queer signs worn together; the opened body of Wittig's Le corps lesbien — mucous membranes, humours, saliva,
+   bones, veins, tongues. Only the grammar of the shapes, never a copy of any character. */
+const POPREF = {
+  bacon: 'baconscream smearH smear cage scream flayed', cenci: 'skullhalf bonesM hscales cuts voids ribs bonesB',
+  vampire: 'vampfang vamp widowpeak collarV bleed batears', dracula: 'vampfang vamp widowpeak collarV batwings sclera',
+  frankenstein: 'patchwork stitches sutures sewn long cheekhole', clown: 'clownmouth clowneye clownnose clownpaint tufts glasgow rictus',
+  strangechild: 'doll low blush void tiny sclera mouthless', elephantman: 'growths humanN slitsN wrinkles',
+  fresco: 'hellmouth batwings horns mouths facemouth hook', gargoyle: 'spout batwings horns maw sclera beak',
+  animedemon: 'fangmaw sunken horns flamehair tongues glasgow', zombie: 'dead lipless cheekhole rot gash skullhalf bonesM',
+  queer: 'lipstick beard wig stubble drawnB thickB beautymark', drag: 'drag lipstick wig drawnB beautymark pend',
+  femme: 'lipstick drag wig drawnB beautymark pend', butch: 'beard thickB stubble stache goatee',
+  wittig: 'flayed folds mucus tongues bonesM veinsM gash slime'
+};
+Object.assign(REF, POPREF); for (const k in POPREF) REFW[k] = new Set(POPREF[k].split(' '));
+const POP = Object.keys(POPREF), GENDER = ['queer', 'drag', 'femme', 'butch'];
+Object.assign(X, {
+  head: X.head + '|patchwork:1:dread|growths:.9:dread|smearH:.8:dread',
+  back: X.back + '|cage:.7:dread|smokeB:.8|bonesB:.8:dread skull|filaments:1:dread',
+  side: X.side + '|collarV:.8:dread',
+  top: X.top + '|widowpeak:.8:dread|wig:.9|bonecrown:.8:dread skull|smokeT:.7',
+  eye: X.eye + '|drag:1|vamp:1:dread|clowneye:.7|dead:1:dread|smear:.8:dread',
+  brows: X.brows + '|drawnB:1|thickB:1',
+  nose: X.nose + '|clownnose:.5|nosebone:.6',
+  mouth: X.mouth + '|maw:2.4:dread|fangmaw:2.2:dread|hellmouth:.9:dread|lipstick:1.2|clownmouth:.7:dread|vampfang:1:dread|baconscream:.9:dread',
+  issue: X.issue + '|tongues:3:dread|slime:1.4:dread|smokeM:1|pour:.8:dread|spout:.6',
+  marks: X.marks + '|gash:1.2:dread|flayed:1:dread|cheekhole:1:dread|skullhalf:.9:dread skull|bonesM:.8:dread|mucus:1:dread|gillarcs:.9:sea|folds:.8:dread|clownpaint:.6|beautymark:.8|stubble:.8|rot:.9:dread',
+  extras: X.extras + '|beard:1.2|slimeE:1:dread|bonesE:.7:dread'
+});
+// tongues of many kinds, moving inside big open mouths
+const TONGUES = ['fork', 'whip', 'chain', 'leaf', 'spiral', 'eye', 'mouth', 'plain'];
+function tongue(o, x, y, L, w, z, kind, ph, ex) {
+  const A = Object.assign({ sw: 1.1, sf: rnd(1.3, 2.6), ph, pv: [x, y] }, ex), a = (ty, X1, Y1, W1, H1, r, z1, role, e) => add(o, pc(ty, X1, Y1, W1, H1, r, z1, role, Object.assign({}, A, e)));
+  switch (kind) {
+    case 'fork': a('fork', x, y + L / 2, w * 1.3, L, 0, z, 'tongue'); break;
+    case 'whip': a('snake', x, y + L / 2, w * 1.8 * pick([-1, 1]), -L * 1.3, 0, z, 'tongue', { sw: 1.8 }); break;
+    case 'chain': { let cy = y; for (let k = 0; k < 7; k++) { const d = w * 1.4 * (1 - k / 9); cy += d * 0.75; a('ellipse', x, cy, d, d, 0, z - k * 0.001, k % 2 ? 'tongue' : 'gum', { sw: 0.6 + k * 0.3, ph: ph - k * 0.5 }); } break; }
+    case 'leaf': a('almondV', x, y + L / 2, w * 1.8, L, 0, z, 'tongue'); a('rect', x, y + L / 2, w * 0.12, L * 0.85, 0, z + 0.001, 'black'); break;
+    case 'spiral': a('spiral', x, y + L * 0.4, L * 0.8 * pick([-1, 1]), L * 0.8, 0, z, 'tongue', { spin: rnd(-0.6, 0.6) }); break;
+    case 'eye': a('capsule', x, y + L / 2, w, L, 0, z, 'tongue'); a('ellipse', x, y + L, w * 1.7, w * 1.7, 0, z + 0.001, 'white'); a('ellipse', x, y + L, w * 0.7, w * 0.7, 0, z + 0.002, 'black', { pul: 0.3 }); break;
+    case 'mouth': a('capsule', x, y + L / 2, w, L, 0, z, 'tongue'); a('ellipse', x, y + L, w * 1.9, w * 1.5, 0, z + 0.001, 'gum'); a('ellipse', x, y + L, w * 1.3, w * 0.8, 0, z + 0.002, 'black'); for (const s of [-1, 1]) a('tri', x + s * w * 0.28, y + L - w * 0.2, w * 0.25, -w * 0.45, 0, z + 0.003, 'tooth'); break;
+    default: a('capsule', x, y + L / 2, w, L, 0, z, 'tongue'); a('rect', x, y + L * 0.45, w * 0.1, L * 0.7, 0, z + 0.001, 'black');
+  }
+}
+Object.assign(NEW.mouth, {
+  maw(o, m, my) { const a = mA(o, my), w = rnd(0.36, 0.52), h = rnd(0.3, 0.46), y = my + 0.04, n = 12 + Math.floor(R() * 10); a(pick(['ellipse', 'sq', 'almond']), 0, y, w * 1.15, h * 1.12, 0, 6, 'lip'); a('ellipse', 0, y, w, h, 0, 6.5, 'black'); for (let j = 0; j < n; j++) { const an = j / n * TAU; a('tri', Math.cos(an) * w * 0.44, y + Math.sin(an) * h * 0.44, w * rnd(0.06, 0.1), h * rnd(0.12, 0.24), an - PI / 2, 8, j % 2 ? 'tooth2' : 'tooth'); } const k = pick([1, 1, 2, 3, 4]); for (let i = 0; i < k; i++) tongue(o, (i - (k - 1) / 2) * w * 0.22, y - h * 0.1, h * rnd(0.6, 1.3), w * rnd(0.1, 0.16), 7 + i * 0.01, pick(TONGUES), i * 1.7, { mc: my }); return false; },
+  fangmaw(o, m, my) { const a = mA(o, my), mw = rnd(0.42, 0.6), mh = rnd(0.2, 0.3); a('ellipse', 0, my, mw * 1.1, mh * 1.2, 0, 6, 'lip'); a('ellipse', 0, my, mw, mh, 0, 6.5, 'black'); for (let j = 0, n = 14 + Math.floor(R() * 14); j < n; j++) { const u = rnd(-0.9, 0.9), top = R() < 0.55, e = mh / 2 * Math.sqrt(1 - u * u), len = mh * rnd(0.2, 0.8); a('tri', u * mw / 2, my + (top ? -e + len / 2 : e - len / 2), mw * rnd(0.025, 0.065), top ? -len : len, rnd(-0.35, 0.35), 8 + R() * 0.1, R() < 0.8 ? 'tooth' : 'tooth2'); } for (const s of [-1, 1]) if (R() < 0.7) a('horn', s * mw * rnd(0.3, 0.5), my - mh * rnd(0.3, 0.9), s * rnd(0.06, 0.1), -rnd(0.2, 0.4), s * rnd(-0.5, 0.8), 8.5, 'tooth', { p: { curl: f3(rnd(0.3, 1)) } }); if (R() < 0.6) tongue(o, rnd(-0.1, 0.1), my, rnd(0.2, 0.4), 0.07, 7, pick(TONGUES), 0, { mc: my }); },
+  hellmouth(o, m, my) { const a = mA(o, my), W = m.head.w * rnd(0.9, 1.1) / m.fk, H = rnd(0.35, 0.5), y = my + 0.05; a('ellipse', 0, y, W, H, 0, 6.5, 'black'); a('semi', 0, y - H * 0.42, W * 1.04, H * 0.3, 0, 6.6, 'lip'); a('bowl', 0, y + H * 0.42, W * 0.94, H * 0.3, 0, 6.6, 'lip'); for (let j = 0; j < 9; j++) { const u = (j + 0.5) / 9 * 2 - 1; a('tri', u * W * 0.44, y - H * 0.2, W * 0.07, -H * 0.3 * (1 - Math.abs(u) * 0.4), 0, 8, 'tooth'); a('tri', u * W * 0.4 + W * 0.03, y + H * 0.22, W * 0.06, H * 0.26 * (1 - Math.abs(u) * 0.4), 0, 8, 'tooth2'); } for (let i = 0, n = pick([3, 5, 7]); i < n; i++) a('flame', (i - (n - 1) / 2) * W * 0.12, y + H * 0.05, W * 0.1 * (i % 2 ? -1 : 1), H * rnd(0.3, 0.5), 0, 7, i % 2 ? 'a0' : 'a1', { pul: 0.2, ph: i }); return false; },
+  lipstick(o, m, my) { const a = mA(o, my), w = rnd(0.26, 0.36); S2(o, 'ellipse', w * 0.22, my - 0.03, w * 0.55, w * 0.26, 0.18, 6, 'lipstick', { mc: my }); a('bowl', 0, my + 0.005, w, w * 0.34, 0, 6, 'lipstick'); a('almond', 0, my, w * 0.8, R() < 0.5 ? 0.03 : 0.07, 0, 6.5, 'black'); if (R() < 0.5) for (let j = 0; j < 4; j++) a('rect', (j - 1.5) * w * 0.12, my - 0.01, w * 0.1, 0.025, 0, 8, 'tooth'); if (R() < 0.4) tongue(o, 0, my, rnd(0.15, 0.3), 0.06, 7, pick(TONGUES), 0, { mc: my }); },
+  clownmouth(o, m, my) { const a = mA(o, my), W = rnd(0.5, 0.7); a('crescent', 0, my - 0.1, W, rnd(0.3, 0.42), 0, 5.8, R() < 0.6 ? 'lipstick' : 'white', { p: { T: 0.32, q: 0.45 } }); a('ellipse', 0, my, W * 0.4, 0.09, 0, 6.5, 'black'); for (let j = 0; j < 7; j++) a('trid', (j - 3) * W * 0.05, my - 0.025, W * 0.045, 0.06, 0, 8, 'tooth'); },
+  vampfang(o, m, my) { const a = mA(o, my), w = rnd(0.26, 0.36); a('ellipse', 0, my, w, 0.09, 0, 6, 'lip'); a('almond', 0, my, w * 0.86, 0.05, 0, 6.5, 'black'); for (const s of [-1, 1]) { a('trid', s * w * 0.2, my + 0.05, 0.035, 0.13, 0, 8.2, 'tooth'); a('drop', s * w * 0.2, my + 0.16, 0.025, 0.04, 0, 8.25, 'weep', { pul: 0.2 }); } },
+  baconscream(o, m, my) { const a = mA(o, my), w = rnd(0.22, 0.32), h = rnd(0.28, 0.4), y = my + 0.03, tw = rnd(-0.4, 0.4); for (let i = 0; i < 3; i++) a('blob', rnd(-0.06, 0.06) + i * 0.04, y + rnd(-0.03, 0.03), w * (1.5 - i * 0.15), h * (1.2 - i * 0.1), tw + i * 0.15, 5.9 + i * 0.01, i % 2 ? 'h2' : 'flesh'); a('ellipse', 0, y, w, h, tw * 0.5, 6.5, 'black'); for (let j = 0; j < 6; j++) a('sq', (j - 2.5) * w * 0.14, y - h * 0.38, w * 0.12, h * 0.12, 0, 8, 'tooth'); a('ellipse', 0, y + h * 0.28, w * 0.6, h * 0.22, 0, 7, 'tongue'); return false; }
+});
+// filaments, drool, mucus, liquids, smoke
+Object.assign(NEW.issue, {
+  tongues(o, m, my) { const k = pick([1, 2, 2, 3, 5]); for (let i = 0; i < k; i++) tongue(o, (i - (k - 1) / 2) * 0.06, my, rnd(0.18, 0.42), rnd(0.05, 0.08), 8.3 + i * 0.01, pick(TONGUES), i * 1.3, { mc: my }); },
+  slime(o, m, my) { for (let i = 0, n = 3 + Math.floor(R() * 5); i < n; i++) { const x = rnd(-0.16, 0.16); add(o, pc('capsule', x, my, rnd(0.008, 0.02), rnd(0.06, 0.12), rnd(-0.1, 0.1), 8.25, 'slime', { mc: my })); if (R() < 0.5) add(o, pc('drop', x, my + 0.08, 0.03, 0.05, 0, 8.25, 'slime', { rise: [rnd(0.2, 0.5), -0.3], ph: R() })); } },
+  smokeM(o, m, my) { for (let i = 0, n = 4 + Math.floor(R() * 4); i < n; i++) add(o, pc('cloud', rnd(-0.05, 0.05), my - 0.02, rnd(0.08, 0.16), rnd(0.07, 0.12), R() * TAU, 8.4, 'smoke', { p: { n: 6 }, rise: [rnd(0.12, 0.3), rnd(0.5, 0.9)], ph: i / n })); },
+  pour(o, m, my) { const x = rnd(-0.08, 0.08), L = rnd(0.3, 0.6); add(o, pc('capsule', x, my + L / 2, rnd(0.04, 0.08), L, 0, 8.3, 'slime', { mc: my, pul: 0.05 })); for (let i = 0; i < 4; i++) add(o, pc('drop', x, my + L, 0.05, 0.08, 0, 8.3, 'slime', { rise: [0.4, -0.45], ph: i / 4 })); },
+  spout(o, m, my) { for (let i = 0; i < 9; i++) add(o, pc('ellipse', 0, my + 0.05, 0.06, 0.08, 0, 8.3, i % 2 ? 'blue' : 'white', { rise: [0.5, -0.9], ph: i / 9 })); }
+});
+Object.assign(NEW.eye, {
+  drag(a, r, st, B, G, sx, rot, ec) { a('semi', 0, -r * 0.3, r * 3.2, r * 1.9, rot, 4.95, 'eyeshadow', { ec }); a('almond', 0, 0, r * 2.4, r * 1.4, rot, 6, 'white', B); a('ellipse', 0, 0, r * 1.05, r * 1.05, 0, 7, 'iris', G(0.6)); a('ellipse', 0, 0, r * 0.45, r * 0.45, 0, 8, 'black', G(0.6)); a('crescent', 0, -r * 0.3, r * 2.7, -r * 0.7, rot, 9, 'black', { p: { T: 0.25, q: 0.1 }, ec }); for (let k = 0; k < 7; k++) { const an = -PI * (0.12 + 0.76 * k / 6); a('tri', Math.cos(an) * r * 1.5, Math.sin(an) * r * 1.0 - r * 0.2, r * 0.18, r * 1.0, an + PI / 2, 9.1, 'black', { ec }); } },
+  vamp(a, r, st, B, G, sx, rot) { a('almond', 0, 0, r * 2.8, r * 1.6, rot, 5, 'black', B); a('almond', 0, 0, r * 2.2, r * 1.1, rot, 6, 'red', B); a('ellipse', 0, 0, r * 0.22, r * 0.9, 0, 8, 'black', G(0.5)); },
+  clowneye(a, r, st, B, G, sx, rot, ec) { st.cs = st.cs || pick(['diamond', 'tri', 'trid', 'star']); st.cr = st.cr || pick(['lipstick', 'eyeshadow', 'black']); a(st.cs, 0, 0, r * 2.6, r * 4.2, 0, 4.95, st.cr, { ec, p: st.cs === 'star' ? { n: 8, j: Array(8).fill(1), inner: 0.2 } : null }); a('ellipse', 0, 0, r * 1.8, r * 1.8, 0, 6, 'white', B); a('ellipse', 0, 0, r * 0.5, r * 0.5, 0, 8, 'black', G(1)); },
+  dead(a, r, st, B, G, sx, rot, ec) { a('almond', 0, r * 0.1, r * 2.5, r * 1.4, rot, 6, 'white', { ec }); a('ellipse', r * 0.25 * sx, r * 0.35, r * 0.7, r * 0.7, 0, 7, 'ball', G(0.1)); a('rect', 0, -r * 0.5, r * 2.6, r * 0.6, rot + 0.15 * sx, 9.5, 'lid', { ec }); },
+  smear(a, r, st, B, G, sx, rot) { const tw = rnd(-0.6, 0.6); a('blob', r * 0.4, 0, r * 3.4, r * 1.6, tw, 5.5, 'flesh', B); a('ellipse', 0, 0, r * 2.2, r * 1.8, tw * 0.5, 6, 'white', B); a('ellipse', r * 0.5, r * 0.2, r * 1.8, r * 0.9, tw, 6.2, 'h2', B); a('ellipse', 0, 0, r * 0.6, r * 0.6, 0, 8, 'black', G(0.8)); }
+});
+Object.assign(NEWB, {
+  drawnB(o, w, y, h) { S2(o, 'crescent', w * 0.55, y - 0.05, w * 1.05, -h * 1.4, 0, 9.6, 'brow', { p: { T: 0.15, q: 0.25 } }); },
+  thickB(o, w, y, h) { S2(o, 'rect', w * 0.55, y, w * 1.1, h * 2.2, rnd(-0.2, 0.1), 9.6, 'brow'); }
+});
+Object.assign(NEW.nose, {
+  clownnose(o) { const d = rnd(0.14, 0.22); add(o, pc('ellipse', 0, 0.12, d, d, 0, 8.8, 'lipstick', { pul: 0.05 })); add(o, pc('ellipse', -d * 0.2, 0.12 - d * 0.2, d * 0.22, d * 0.22, 0, 8.9, 'white')); },
+  nosebone(o) { const y = 0.12; S2(o, 'ellipse', 0.03, y + 0.02, 0.03, 0.045, 0, 7.6, 'black'); add(o, pc('bone', 0, y + 0.03, 0.34, 0.08, rnd(-0.15, 0.15), 8.9, 'bone')); }
+});
+// wounded and flayed faces, bones, gills, mucous folds, the signs of gender
+Object.assign(NEW.marks, {
+  gash(o, m) { const { w: hw, h: hh } = hd(m); for (let i = 0, n = pick([1, 1, 2, 3]); i < n; i++) { const x = rnd(-0.3, 0.3) * hw, y = 0.02 + rnd(-0.35, 0.3) * hh, L = rnd(0.16, 0.36), r = rnd(-1.2, 1.2); add(o, pc('almondV', x, y, L * 0.22, L, r, 4.3, 'flesh')); add(o, pc('almondV', x, y, L * 0.08, L * 0.85, r, 4.31, 'black')); if (R() < 0.5) add(o, pc('drop', x, y + L * 0.3, 0.03, 0.05, 0, 4.32, 'weep', { rise: [rnd(0.1, 0.25), -0.25], ph: R() })); } },
+  flayed(o, m) { const { w: hw, h: hh } = hd(m), sg = pick([-1, 1]), cx = sg * hw * rnd(0.15, 0.28), cy = 0.02 + rnd(-0.1, 0.2) * hh, W = hw * rnd(0.32, 0.5), H = hh * rnd(0.35, 0.6); add(o, pc('blob', cx, cy, W, H, R(), 3.9, 'flesh')); for (let i = 0, n = 6 + Math.floor(R() * 5); i < n; i++) add(o, pc('almondV', cx + (i - (n - 1) / 2) * W * 0.7 / n, cy, W * 0.06, H * rnd(0.5, 0.85), rnd(-0.15, 0.15), 3.95, i % 2 ? 'bone' : 'black')); if (R() < 0.6) add(o, pc('zig', cx, cy - H * 0.5, W * 1.05, 0.05, 0, 3.97, 'hc')); },
+  cheekhole(o, m) { const { w: hw } = hd(m), sg = pick([-1, 1]), x = sg * hw * rnd(0.22, 0.3), y = rnd(0.16, 0.28), W = rnd(0.14, 0.22); add(o, pc('blob', x, y, W * 1.25, W * 0.85, R(), 4.2, 'flesh')); add(o, pc('ellipse', x, y, W, W * 0.6, 0, 4.25, 'black')); for (let j = 0; j < 5; j++) { add(o, pc('sq', x + (j - 2) * W * 0.18, y - W * 0.12, W * 0.15, W * 0.2, 0, 4.3, 'tooth')); add(o, pc('sq', x + (j - 2) * W * 0.18, y + W * 0.12, W * 0.15, W * 0.2, 0, 4.3, 'tooth2')); } },
+  skullhalf(o, m) { const { w: hw, h: hh } = hd(m), sg = pick([-1, 1]); add(o, pc('semi', sg * hw * 0.22, 0.02, hh * 0.92, hw * 0.44, sg * PI / 2, 3.8, 'bone')); add(o, pc(pick(['ellipse', 'almond', 'sq']), sg * hw * 0.2, -0.08, 0.17, 0.15, 0, 4.8, 'black')); add(o, pc('heart', sg * 0.04, 0.1, 0.07, -0.08, 0, 4.8, 'black')); for (let j = 0; j < 4; j++) add(o, pc('sq', sg * (0.04 + j * 0.045), 0.27, 0.04, 0.07, 0, 4.8, 'bone')); for (let j = 0; j < 3; j++) add(o, pc('rect', sg * hw * 0.22, 0.02 + (j - 1) * hh * 0.2, hw * 0.3, 0.008, sg * 0.3, 3.85, 'black')); },
+  bonesM(o, m) { const { w: hw, h: hh } = hd(m); for (let i = 0, n = 1 + Math.floor(R() * 4); i < n; i++) { const L = rnd(0.16, 0.34); add(o, pc('bone', rnd(-0.4, 0.4) * hw, 0.02 + rnd(-0.45, 0.45) * hh, L, L * 0.26, R() * PI, 4.4, 'bone')); } },
+  mucus(o, m) { const { w: hw, h: hh } = hd(m); for (let i = 0, n = 3 + Math.floor(R() * 5); i < n; i++) { const x = rnd(-0.38, 0.38) * hw, y = 0.02 + rnd(-0.4, 0.4) * hh, s = rnd(0.05, 0.14); add(o, pc('blob', x, y, s, s * rnd(0.7, 1.3), R() * TAU, 4.45, 'slime', { pul: 0.08, ph: i })); add(o, pc('ellipse', x - s * 0.2, y - s * 0.2, s * 0.25, s * 0.18, 0, 4.46, 'white')); } for (let i = 0; i < pick([0, 2, 3]); i++) { const x = rnd(-0.05, 0.05); add(o, pc('capsule', x, 0.22, 0.012, rnd(0.1, 0.25), 0, 9.65, 'slime', { sw: 0.7, ph: i, pv: [x, 0.14] })); } },
+  gillarcs(o, m) { const { w: hw } = hd(m); for (let j = 0; j < 4; j++) S2(o, 'crescent', hw * 0.36 - j * 0.015, 0.12 + j * 0.06, 0.16, 0.08, 0.6 + j * 0.1, 3.7, j % 2 ? 'gum' : 'black', { p: { T: 0.25, q: 0.2 }, pul: 0.12, ph: j * 0.4 }); },
+  folds(o, m) { const { w: hw, h: hh } = hd(m), cx = R() < 0.5 ? 0 : pick([-1, 1]) * hw * 0.28, cy = 0.02 + rnd(-0.35, 0.3) * hh, L = rnd(0.16, 0.3); for (let k = 0; k < 4; k++) add(o, pc('almondV', cx, cy, L * (0.5 - k * 0.1), L * (1 - k * 0.18), 0, 4.2 + k * 0.01, ['flesh', 'gum', 'slime', 'black'][k], { pul: 0.06, ph: k })); },
+  clownpaint(o, m) { const { w: hw, h: hh } = hd(m); add(o, pc('cloud', 0, 0.1, hw * 0.8, hh * 0.55, 0, 3.1, 'white', { p: { n: 7 } })); },
+  beautymark(o) { add(o, pc('ellipse', pick([-1, 1]) * rnd(0.1, 0.2), rnd(0.12, 0.26), 0.03, 0.03, 0, 9.7, 'black')); },
+  stubble(o, m) { const { w: hw, h: hh } = hd(m); for (let i = 0; i < 46; i++) { const x = rnd(-0.34, 0.34) * hw, y = 0.02 + rnd(0.12, 0.44) * hh; if (Math.pow(x / (hw / 2), 2) + Math.pow((y - 0.02) / (hh / 2), 2) < 0.8) add(o, pc('ellipse', x, y, 0.013, 0.013, 0, 3.5, 'shade')); } },
+  rot(o, m) { const { w: hw, h: hh } = hd(m); for (let i = 0, n = 2 + Math.floor(R() * 4); i < n; i++) { const x = rnd(-0.35, 0.35) * hw, y = 0.02 + rnd(-0.4, 0.4) * hh, s = rnd(0.1, 0.24); add(o, pc('blob', x, y, s, s * rnd(0.6, 1.2), R() * TAU, 3.9, i % 2 ? 'slime' : 'shade')); for (let k = 0; k < 3; k++) add(o, pc('ellipse', x + rnd(-0.3, 0.3) * s, y + rnd(-0.3, 0.3) * s, s * 0.14, s * 0.14, 0, 3.92, 'black')); } }
+});
+Object.assign(NEW.head, {
+  patchwork(o, m) { const { w: hw, h: hh } = hd(m); for (let i = 0, n = 3 + Math.floor(R() * 3); i < n; i++) { const x = rnd(-0.3, 0.3) * hw, y = 0.02 + rnd(-0.32, 0.32) * hh, W = hw * rnd(0.3, 0.55), H = hh * rnd(0.2, 0.4), r = rnd(-0.4, 0.4); add(o, pc(pick(['poly', 'rect', 'trap', 'tri']), x, y, W, H, r, 2.3 + i * 0.01, pick(['h2', 'h3', 'flesh']))); for (let j = 0; j < 6; j++) { const u = (j - 2.5) / 6; add(o, pc('rect', x + Math.cos(r) * u * W + Math.sin(r) * H / 2, y + Math.sin(r) * u * W - Math.cos(r) * H / 2, 0.008, 0.05, r, 2.35, 'black')); } } },
+  growths(o, m) { const sg = pick([-1, 1]); for (let i = 0, n = 4 + Math.floor(R() * 6); i < n; i++) { const s = rnd(0.14, 0.32), [x, y] = radial(m, sg * rnd(0.1, 2.2), -s * 0.2, 0.85), ty = pick(['blob', 'cloud', 'ellipse']); add(o, pc(ty, x, y, s, s * rnd(0.8, 1.2), R() * TAU, 1.95, R() < 0.7 ? 'hc' : 'h2', { pul: 0.03, ph: i })); } },
+  smearH(o, m) { const { w: hw, h: hh } = hd(m); for (let i = 0, n = 3 + Math.floor(R() * 3); i < n; i++) add(o, pc(pick(['blob', 'almond', 'snake', 'crescent']), rnd(-0.3, 0.3) * hw, 0.02 + rnd(-0.3, 0.3) * hh, hw * rnd(0.5, 1.1), hh * rnd(0.15, 0.35), rnd(-0.8, 0.8), 2.4 + i * 0.01, pick(['h2', 'h3', 'flesh', 'white']), { sw: 0.3, sf: 0.6, ph: i })); }
+});
+Object.assign(NEW.top, {
+  widowpeak(o, m) { const { w: hw, h: hh, top } = hd(m); add(o, pc('trid', 0, top + hh * 0.13, hw * 0.98, hh * 0.3, 0, 4.6, 'brow')); add(o, pc('semi', 0, top + hh * 0.08, hw, hh * 0.18, 0, 4.59, 'brow')); },
+  wig(o, m) { const { w: hw, h: hh, top } = hd(m), H = rnd(0.35, 0.6); add(o, pc('cloud', 0, top + 0.05 - H * 0.35, hw * rnd(1.2, 1.6), H * 1.3, 0, 0.9, 'top', { p: { n: 8 + Math.floor(R() * 5) } })); if (R() < 0.6) S2(o, 'cloud', hw * 0.55, 0.15, hw * 0.5, hh * 0.8, 0, 0.9, 'top', { p: { n: 6 } }); },
+  bonecrown(o, m) { const n = 5 + 2 * Math.floor(R() * 3); for (let i = 0; i < n; i++) { const th = (i / (n - 1) - 0.5) * 2.2, L = rnd(0.2, 0.35), [x, y] = radial(m, th, L * 0.45, 0.9); add(o, pc('bone', x, y, L, L * 0.25, th + PI / 2, 1, 'bone')); } },
+  smokeT(o, m) { const { top } = hd(m); for (let i = 0; i < 8; i++) add(o, pc('cloud', rnd(-0.15, 0.15), top - 0.02, rnd(0.12, 0.24), rnd(0.1, 0.18), R() * TAU, 1, 'smoke', { p: { n: 6 }, rise: [rnd(0.08, 0.2), rnd(0.6, 1.1)], ph: i / 8 })); }
+});
+Object.assign(NEW.side, {
+  collarV(o, m) { const { w: hw, h: hh } = hd(m), H = hh * rnd(0.8, 1.2); S2(o, 'tri', hw * 0.52, 0.02 + hh * 0.5 - H * 0.35, hw * 0.5, H, -0.35, 0.8, 'top'); S2(o, 'tri', hw * 0.5, 0.02 + hh * 0.5 - H * 0.3, hw * 0.3, H * 0.75, -0.35, 0.82, 'earIn'); }
+});
+Object.assign(NEW.back, {
+  cage(o, m) { const R0 = Rm_(m) * rnd(0.72, 0.9), ox = rnd(-0.2, 0.2), oy = -rnd(0.12, 0.22), c = 0.02, L = (x1, y1, x2, y2) => add(o, pc('rect', (x1 + x2) / 2, (y1 + y2) / 2, 0.009, Math.hypot(x2 - x1, y2 - y1), Math.atan2(x2 - x1, y1 - y2), 0.3, 'halo')); const F = [[-R0, c - R0], [R0, c - R0], [R0, c + R0], [-R0, c + R0]], B2 = F.map(([x, y]) => [x * 0.7 + ox, (y - c) * 0.7 + c + oy]); for (let i = 0; i < 4; i++) { const j = (i + 1) % 4; L(...F[i], ...F[j]); L(...B2[i], ...B2[j]); L(...F[i], ...B2[i]); } },
+  smokeB(o, m) { for (let i = 0; i < 10; i++) add(o, pc('cloud', rnd(-0.4, 0.4), 0.02 + rnd(-0.2, 0.3), rnd(0.2, 0.4), rnd(0.15, 0.3), R() * TAU, 0.3, 'smoke', { p: { n: 7 }, rise: [rnd(0.05, 0.12), rnd(0.8, 1.4)], ph: i / 10 })); },
+  bonesB(o, m) { const n = 10 + Math.floor(R() * 7); for (let i = 0; i < n; i++) { const th = i / n * TAU, L = rnd(0.22, 0.38), [x, y] = radial(m, th, L * 0.45, 0.85); add(o, pc('bone', x, y, L, L * 0.25, th + PI / 2, 0.4, 'bone')); } },
+  filaments(o, m) { for (let i = 0, n = 14 + Math.floor(R() * 16); i < n; i++) { const th = R() * TAU, L = rnd(0.3, 0.8), [x, y] = radial(m, th, L, 0.8), A = { sw: 0.6, sf: rnd(0.4, 1), ph: i, pv: radial(m, th, 0, 0.8) }; add(o, pc('rect', x, y, 0.006, L, th, 0.45, pick(['slime', 'smoke', 'top']), A)); if (R() < 0.3) { const [tx, ty] = radial(m, th, L * 2, 0.8); add(o, pc('ellipse', tx, ty, 0.03, 0.03, 0, 0.46, 'slime', A)); } } }
+});
+Object.assign(NEW.extras, {
+  beard(o, m) { const { w: hw, bot } = hd(m), H = rnd(0.2, 0.45), ty = pick(['cloud', 'trid', 'shield', 'drop']); add(o, pc(ty, 0, (0.15 + bot + H) / 2, hw * rnd(0.75, 1.0), (bot + H - 0.15) * (ty === 'drop' ? -1 : 1), 0, 4.5, 'top', { p: ty === 'cloud' ? { n: 9 } : undefined, sw: 0.15, pv: [0, 0.15] })); },
+  slimeE(o, m) { const { w: hw, bot } = hd(m); for (let i = 0, n = 3 + Math.floor(R() * 5); i < n; i++) { const x = rnd(-0.3, 0.3) * hw, L = rnd(0.15, 0.5), y0 = bot - 0.04 - Math.abs(x) * 0.3, A = { sw: 0.8, sf: rnd(0.6, 1.2), ph: i, pv: [x, y0] }; add(o, pc('rect', x, y0 + L / 2, 0.009, L, 0, 1.4, 'slime', A)); add(o, pc('drop', x, y0 + L, 0.035, 0.055, 0, 1.41, 'slime', A)); } },
+  bonesE(o, m) { const { bot } = hd(m), n = 7 + 2 * Math.floor(R() * 3); for (let i = 0; i < n; i++) { const u = 2 * i / (n - 1) - 1; add(o, pc('bone', u * (n - 1) * 0.035, bot + 0.03 + 0.12 * (1 - u * u), 0.13, 0.035, u * 0.6 + PI / 2, 1.4, 'bone')); } }
+});
+
 /* colours by role, from a scheme that can change on its own; sometimes only one or two colours */
 function scheme() {
   const r = R(), h1 = pick(HUES), h2 = pick(HUES.filter(c => c !== h1));
@@ -1457,6 +1587,12 @@ function paint(m) {
   m.s.shade = m.s.hc === 'black' ? 'red' : 'black';
   m.s.weep = m.s.hc === 'red' ? 'black' : 'red';
   m.s.gum = m.s.hc === 'red' ? 'yellow' : 'red';
+  m.s.flesh = m.s.hc === 'red' ? 'yellow' : 'red';
+  m.s.bone = m.s.hc === 'white' ? 'yellow' : 'white';
+  m.s.lipstick = m.s.hc === 'red' ? 'black' : 'red';
+  if (!m.s.slime || m.s.slime === m.s.hc) m.s.slime = pick(['yellow', 'white', 'white', 'blue'].filter(c => c !== m.s.hc));
+  if (!m.s.smoke) m.s.smoke = pick(['white', 'white', 'black', 'yellow']);
+  if (!m.s.eyeshadow || m.s.eyeshadow === m.s.hc) m.s.eyeshadow = pick(HUES.filter(c => c !== m.s.hc));
   for (const k of GROUPS) for (const id in m.g[k]) {
     const p = m.g[k][id]; p.col = m.s[p.role] || p.role;
     if (m.vocab === 'kand' && HUES.includes(p.col)) p.col = KAND[p.type] || p.col;
@@ -1475,13 +1611,14 @@ function distort(m) {   // the uncanny geometry of a face
   m.droop = R() < (dr ? 0.14 : 0.03) ? pick([-1, 1]) * rnd(0.1, 0.25) : 0;
   m.stretch = R() < (dr ? 0.16 : 0.04) ? rnd(1.18, 1.4) : 1;
 }
-const SHOW = new Set(['ball', 'white', 'iris', 'pupilIn', 'tooth', 'tooth2', 'tongue', 'gum']);
+const SHOW = new Set(['ball', 'white', 'iris', 'pupilIn', 'tooth', 'tooth2', 'tongue', 'gum', 'bone', 'slime']);
 const vocabOf = m => (m.th.includes('geo') ? R() < 0.4 : R() < 0.06) ? pick(['circles', 'tris', 'squares', 'kand', 'kand', 'hex']) : null;
 function newMonster(prev) {
   const m = { g: {}, raw: {}, s: scheme(), ls: lineStyle(), th: refsFor(), twin: R() < 0.04, fk: 1, fy: 0, tilt: 0, off: 0 };
   if (prev && R() < 0.5) { const k = prev.th.filter(x => REF[x]); if (k.length) m.th.push(pick(k)); }   // an animal of the monster before stays
   m.vocab = vocabOf(m); m.shadow = R() < (m.th.includes('dread') ? 0.07 : 0.015);
   distort(m);
+  m.wire = R() < 0.07; if (m.wire) m.shadow = false;
   if (m.th.includes('cubist') ? R() < 0.7 : R() < 0.05) { m.tilt = rnd(-0.3, 0.3); m.off = rnd(-0.07, 0.07); }
   for (const k of ['head', 'back', 'side', 'top', 'marks', 'eyes', 'brows', 'nose', 'app', 'mouth', 'extras']) gen(m, k);
   paint(m);
@@ -1506,12 +1643,13 @@ function mutate(m) {
     else { regen('head'); for (const k of HEADDEP) regen(k); for (const k of FEAT) place(m, k); }
   };
   if (R() < 0.2) {   // the references drift: another animal, a plant, a sculptor comes in
-    const i = m.th.findIndex(x => REF[x] || TH.includes(x)), pool = R() < 0.6 ? ANIMALS : R() < 0.6 ? PLANTS : R() < 0.5 ? SCULPT : TH;
+    const i = m.th.findIndex(x => REF[x] || TH.includes(x)), pool = R() < 0.25 ? POP : R() < 0.6 ? ANIMALS : R() < 0.6 ? PLANTS : R() < 0.5 ? SCULPT : TH;
     if (i >= 0) m.th[i] = pick(pool); if (pool === PLANTS && !m.th.includes('plant')) m.th.push('plant'); if (pool === SCULPT && !m.th.includes('geo')) m.th.push('geo');
   }
   if (R() < 0.05) { m.vocab = m.vocab ? null : vocabOf(m) || pick(['circles', 'kand', 'tris']); for (const k of GROUPS) place(m, k); }
   if (m.shadow ? R() < 0.25 : R() < 0.02) m.shadow = !m.shadow;
   if (R() < 0.05) { distort(m); for (const k of FEAT) place(m, k); }
+  if (R() < (m.wire ? 0.2 : 0.03)) { m.wire = !m.wire; if (m.wire) m.shadow = false; }
   one(); if (R() < 0.25) one();
   if (R() < 0.1) m.ls = lineStyle();
   paint(m);
@@ -1723,6 +1861,7 @@ function drawPiece(d, t) {
   if (m.orb) { const a = ft * m.orb, c = Math.cos(a), sn = Math.sin(a), dx = x - m.pv[0], dy = y - m.pv[1]; x = m.pv[0] + dx * c - dy * sn; y = m.pv[1] + dx * sn + dy * c; r += a; }
   if (m.sway) x += Math.sin(ft * 1.6 + (m.ph || 0)) * m.sway * cur.tent;
   if (m.spin) r += ft * m.spin;
+  if (m.rise) { const u = (((ft * m.rise[0] + (m.ph || 0)) % 1) + 1) % 1, k = Math.sin(Math.PI * u) * (1 + u); y -= u * m.rise[1]; x += Math.sin(u * 5 + (m.ph || 0) * 7) * Math.abs(m.rise[1]) * 0.12; w *= k; h *= k; }
   if (m.pul) { const k = 1 + m.pul * Math.sin(ft * 2.3 + (m.ph || 0)); w *= k; h *= k; }
   const fs = Lf.fs, fc = Math.cos(Lf.rot), fsn = Math.sin(Lf.rot);
   const X0 = x * fs, Y0 = y * fs;
@@ -1730,6 +1869,7 @@ function drawPiece(d, t) {
   const W2 = w * fs * S, H2 = h * fs * S, rr = r + Lf.rot;
   if (Math.abs(W2) < 0.4 || Math.abs(H2) < 0.4) return;
   const path = piecePath(d, cx, cy, W2, H2, rr);
+  if (M && M.wire) { ctx.lineWidth = Math.max(1, 0.005 * S); ctx.lineJoin = 'round'; ctx.strokeStyle = CC(d.ct && t > d.ct0 + d.cdur * 0.5 ? d.target : d.shown); ctx.stroke(path); return; }
   ctx.fillStyle = CC(d.shown); ctx.fill(path);
   if (d.ct && t > d.ct0) {
     const e = EASE.inOutCubic(clamp((t - d.ct0) / d.cdur, 0, 1)), L = Math.max(Math.abs(W2), Math.abs(H2));
