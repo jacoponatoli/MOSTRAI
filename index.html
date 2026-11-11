@@ -26,7 +26,7 @@
 <aside id="info">
   <h1>MOSTRAI</h1>
   <p>A single monstrous face, always new.</p>
-  <p>Its genome mixes a bestiary: strange, monstrous and ordinary animals (anglerfish, bats, mandrills, star-nosed moles, axolotls, spiders, mantises, octopuses, lampreys), plants and fungi (flytraps, rafflesia, lotus pods, cordyceps, mandrakes), and sculpture (Brancusi, Moore, Calder, Giacometti, Fontana). Sometimes it turns into pure geometry. It insists on what makes a face frightening: eyes with too much white or none at all, sunken sockets, mouths cut too wide, jaws hanging too long, faces too long, features sliding or upside down, stillness and then a snap. Other voices enter the flow: Francis Bacon, Giulia Cenci, vampires and stitched creatures of novels, films and comics, frightening clowns, strange children, the man with the growths, the devils of medieval frescoes, gargoyles, the demons of anime, zombies; masculine, feminine and queer signs worn together; the opened body of Monique Wittig's <i>Le corps lesbien</i>. Tongues, teeth, bones, gills, wounds, mucus, smoke. Sometimes the monster is only lines. It watches you.</p>
+  <p>Its genome mixes a bestiary: strange, monstrous and ordinary animals (anglerfish, bats, mandrills, star-nosed moles, axolotls, spiders, mantises, octopuses, lampreys), plants and fungi (flytraps, rafflesia, lotus pods, cordyceps, mandrakes), and sculpture (Brancusi, Moore, Calder, Giacometti, Fontana). Sometimes it turns into pure geometry. It insists on what makes a face frightening: eyes with too much white or none at all, sunken sockets, mouths cut too wide, jaws hanging too long, faces too long, features sliding or upside down, stillness and then a snap. Other voices enter the flow: Francis Bacon, Giulia Cenci, vampires and stitched creatures of novels, films and comics, frightening clowns, strange children, the man with the growths, the devils of medieval frescoes, gargoyles, the demons of anime, zombies; masculine, feminine and queer signs worn together; the opened body of Monique Wittig's <i>Le corps lesbien</i>. Tongues, teeth, bones, gills, wounds, mucus, smoke. Sometimes the monster is only lines. Then Ulisse Aldrovandi's woodcuts of monsters, with their hatching; Paul B. Preciado's monster that speaks from its cage; the threat faces of animals — wrinkled muzzles, lips pulled over the canines, ears pinned back, bristling fur, the open gape. At times the face stays still and only the mouth and its tongues move; at times almost everything is taken away. It watches you.</p>
   <p>The machine invents a monster and never stops changing it: a face made of geometric shapes in the three primary colours, white and black, on a ground that changes colour too. It mixes the grammar of many monsters without copying any: Mesoamerican and Andean masks, Amazonian feather crowns, Caribbean carnival, the demon faces of India, Sri Lanka and Bali, Himalayan masks, oni and yokai, anime, taotie and opera faces, African and Oceanic masks, gorgons, medieval grotesques, commedia and carnival, skulls, cartoons, robots, aliens, insects, sea creatures, cubism, Miró, the Bauhaus, pixels, the first idols. Eyes, horns, crowns, teeth, tongues, beaks, ears and tentacles are reinvented at every moment, while the face breathes, blinks, looks around, chews and sways, at ever-changing speeds and rhythms.</p>
   <p><i>monstrum</i>: from <i>monere</i>, to warn. Cicero heard in it <i>monstrare</i>, to show.</p>
   <p>A project by Jacopo Natoli, 2026</p>
@@ -277,7 +277,7 @@ function gHead(m) {
   else if (prop === 'long') { hw = rnd(0.42, 0.54); hh = rnd(1.12, 1.3); }
   else if (prop === 'big') { hw = rnd(0.86, 0.98); hh = rnd(0.9, 1.02); }
   else { hw = rnd(0.62, 0.86); hh = rnd(0.78, 1.0); }
-  let kind = wp(m, 'plain:6|layer:3.5|band:2:africa bauhaus andes|split:2:cubist carnival japan china|quad:1:bauhaus cubist|mosaic:1.3:meso pixel andes|arci:1.2:medieval miro amazon|pixel:1.2:pixel robot|cone:1:andes carnival minimal|grid:1:bauhaus');
+  let kind = m.mini ? 'plain' : wp(m, 'plain:6|layer:3.5|band:2:africa bauhaus andes|split:2:cubist carnival japan china|quad:1:bauhaus cubist|mosaic:1.3:meso pixel andes|arci:1.2:medieval miro amazon|pixel:1.2:pixel robot|cone:1:andes carnival minimal|grid:1:bauhaus');
   let t = wp(m, 'ellipse:3|poly:2|shield:1.5:greek medieval|trid:1|rect:1.5:robot meso andes bauhaus|diamond:1|almond:1:africa oceania|semi:1|star:.6:carib|sq:2:meso oceania cartoon japan|trap:1.5:meso andes africa|capsule:1:africa minimal alien|heart:1:africa skull|drop:1:alien sea|blob:1:miro|cloud:.8:cartoon|gear:.5:robot carib|cleft:1:meso|hex:1:insect robot bauhaus|step:.6:meso andes|egg:.8:geo|bell:.6');
   let fk = { n: 1, tiny: rnd(0.5, 0.65), big: rnd(1.08, 1.2) }[wp(m, 'n:8|tiny:1:minimal cubist cartoon|big:1.2:anime cartoon|tiny:.9:dread')];
   if (kind === 'quad') t = 'ellipse';
@@ -345,10 +345,10 @@ function gHead(m) {
         add(o, pc(ty, (i - (cols - 1) / 2) * cw, 0.02 + (j - (rows - 1) / 2) * ch, cw * 0.84, ch * 0.84, 0, 2.2, roles[key]));
       }
     }
-    if ((kind === 'plain' || kind === 'layer') && R() < 0.35) add(o, pc(pick(['semi', 'rect', 'trid', 'poly', 'ellipse', 'bowl', 'sq', 'trap']), 0, rnd(0.24, 0.36), hw * rnd(0.55, 0.85), rnd(0.22, 0.38), 0, 2.5, 'h2', { jw: 1 }));
+    if ((kind === 'plain' || kind === 'layer') && !m.mini && R() < 0.35) add(o, pc(pick(['semi', 'rect', 'trid', 'poly', 'ellipse', 'bowl', 'sq', 'trap']), 0, rnd(0.24, 0.36), hw * rnd(0.55, 0.85), rnd(0.22, 0.38), 0, 2.5, 'h2', { jw: 1 }));
   }
   m.head = { w: hw, h: hh, top: 0.02 - hh / 2, bot: 0.02 + hh / 2 };
-  if (kind !== 'pixel' && kind !== 'grid') NW('head', o, m, wp(m, X.head));
+  if (kind !== 'pixel' && kind !== 'grid' && !m.mini) NW('head', o, m, wp(m, X.head));
   m.fk = fk * Math.min(1, hw / 0.66);
   return o;
 }
@@ -639,7 +639,7 @@ function gTop(m) {
 /* ---------- eyes ---------- */
 const PUP = ['dot', 'dot', 'dot', 'slitV', 'slitV', 'slitH', 'ring', 'multi', 'cross', 'none', 'star', 'diamond', 'goat', 'key', 'heart', 'pie'];
 function eyeStyle(m) {
-  let kind = wp(m, 'classic:6|goggle:2:meso africa oceania robot andes|anime:2.5:anime|pie:2:cartoon|googly:2:cartoon carnival|hollow:1.5:skull|slit:1.5:africa oceania japan alien|cowrie:1.2:oceania africa|blank:1:greek minimal cubist|x:.8:cartoon|hypno:1.2:cartoon miro|tri:1.2:carnival skull|angry:1.5:japan tibet|compound:1:insect|dot:1.5:minimal miro bauhaus|rectE:1.2:robot china pixel|starE:.8:carnival|winged:1.2:andes meso|bar:1:minimal cubist robot|lumin:1:alien robot|cat:1.2:japan anime' + X.eye);
+  let kind = m.mini ? wp(m, MINI.eye) : wp(m, 'classic:6|goggle:2:meso africa oceania robot andes|anime:2.5:anime|pie:2:cartoon|googly:2:cartoon carnival|hollow:1.5:skull|slit:1.5:africa oceania japan alien|cowrie:1.2:oceania africa|blank:1:greek minimal cubist|x:.8:cartoon|hypno:1.2:cartoon miro|tri:1.2:carnival skull|angry:1.5:japan tibet|compound:1:insect|dot:1.5:minimal miro bauhaus|rectE:1.2:robot china pixel|starE:.8:carnival|winged:1.2:andes meso|bar:1:minimal cubist robot|lumin:1:alien robot|cat:1.2:japan anime' + X.eye);
   const st = { kind, shape: 'ellipse', dot: R() < 0.55 };
   switch (kind) {
     case 'cat': st.kind = 'classic'; st.shape = 'almond'; st.pupil = 'slitV'; st.slant = rnd(0.15, 0.35); break;
@@ -666,7 +666,8 @@ function eyeStyle(m) {
   if (['classic', 'googly', 'pie', 'lumin'].includes(st.kind) && wp(m, 'no:7|yes:1:miro china carnival') === 'yes') st.lash = 5 + Math.floor(R() * 5);
   if (wp(m, 'no:8|yes:1.5:carnival skull japan china carib') === 'yes') { st.sur = pick(['flame', 'diamond', 'star', 'cloud', 'tri', 'almondV', 'heart', 'gear']); st.surP = PP(st.sur); }
   st.bag = R() < 0.07; st.tear = wp(m, 'no:10|yes:1:andes carnival anime') === 'yes';
-  if (m.th.includes('dread')) { if (R() < 0.28 && st.kind !== 'sunken') st.shade = pick(['ellipse', 'almond', 'trid', 'drop']); if (R() < 0.16) st.weep = 1 + Math.floor(R() * 3); }
+  if (m.mini) { st.sur = null; st.lash = 0; st.bag = false; st.tear = false; st.weep = 0; st.crazy = false; }
+  if (m.th.includes('dread') && !m.mini) { if (R() < 0.28 && st.kind !== 'sunken') st.shade = pick(['ellipse', 'almond', 'trid', 'drop']); if (R() < 0.16) st.weep = 1 + Math.floor(R() * 3); }
   return st;
 }
 function eye(o, m, x, y, r, st, i) {
@@ -734,7 +735,7 @@ function eye(o, m, x, y, r, st, i) {
 }
 function gEyes(m) {
   const o = mk(), y0 = rnd(-0.16, -0.02), d = rnd(0.11, 0.19), r = rnd(0.06, 0.12);
-  let L = wp(m, 'one:2:greek japan alien|two:6|three:1.5:india tibet|row:1|four:1:insect|five:.8|six:.8:insect|ring:.8|grid:.6|odd:1:cubist miro|stack:.8:india alien|cheeks:.7|scatter:1:medieval miro|spider:1:insect|stalk:1:alien sea cartoon insect|triple:.7:meso|cubist:1.2:cubist|huge:1:anime cartoon|tiny:.8:minimal|wide:.8:sea|none:.25:minimal' + X.lay);
+  let L = m.mini ? wp(m, MINI.lay) : wp(m, 'one:2:greek japan alien|two:6|three:1.5:india tibet|row:1|four:1:insect|five:.8|six:.8:insect|ring:.8|grid:.6|odd:1:cubist miro|stack:.8:india alien|cheeks:.7|scatter:1:medieval miro|spider:1:insect|stalk:1:alien sea cartoon insect|triple:.7:meso|cubist:1.2:cubist|huge:1:anime cartoon|tiny:.8:minimal|wide:.8:sea|none:.25:minimal' + X.lay);
   if (L === 'stalk' && (Math.abs(m.fk - 1) > 0.01 || m.fy)) L = 'two';
   let E = [];
   m.dbl = false;
@@ -885,7 +886,7 @@ function oneMouth(o, m, cx, my, t, sc, zo) {
 }
 function gMouth(m) {
   const o = mk(), my = rnd(0.2, 0.3), M = { mc: my }, a = (ty, x, y, w, h, r, z, role, ex) => add(o, pc(ty, x, y, w, h, r, z, role, ex === undefined ? M : ex));
-  const t = wp(m, 'wide:4|rect:2:robot meso|smile:2:cartoon|frown:1.5:greek japan|O:1.5:greek|vertical:1:alien insect|zig:1:skull pixel|dia:.7:africa|double:1|curve:1.5:minimal anime cartoon|tiny:1.5:anime minimal alien|cat:1:anime japan|skull:1.5:skull|stitch:1:skull cartoon|beak:1.2:sea medieval|lamprey:1.2:sea alien|mandibles:1.2:insect|tusked:2.5:bali india lanka japan greek china|jawless:1.2:india china|nested:1:alien medieval|triple:.7|mega:1:greek|grille:1.2:robot|eight:1:oceania|bar:1:minimal bauhaus|eyemouth:.7:medieval miro|facemouth:.6:medieval|slit:1:japan|lips:1:cartoon|snarl:1.2:meso andes china|none:.3:minimal' + X.mouth);
+  const t = m.mini ? wp(m, MINI.mouth) : m.mfocus ? wp(m, MFOC) : wp(m, 'wide:4|rect:2:robot meso|smile:2:cartoon|frown:1.5:greek japan|O:1.5:greek|vertical:1:alien insect|zig:1:skull pixel|dia:.7:africa|double:1|curve:1.5:minimal anime cartoon|tiny:1.5:anime minimal alien|cat:1:anime japan|skull:1.5:skull|stitch:1:skull cartoon|beak:1.2:sea medieval|lamprey:1.2:sea alien|mandibles:1.2:insect|tusked:2.5:bali india lanka japan greek china|jawless:1.2:india china|nested:1:alien medieval|triple:.7|mega:1:greek|grille:1.2:robot|eight:1:oceania|bar:1:minimal bauhaus|eyemouth:.7:medieval miro|facemouth:.6:medieval|slit:1:japan|lips:1:cartoon|snarl:1.2:meso andes china|none:.3:minimal' + X.mouth);
   let issue = true;
   switch (t) {
     case 'double': { const [, h] = oneMouth(o, m, 0, my - 0.03, pick(['wide', 'rect', 'smile'])); oneMouth(o, m, 0, my + h + 0.06, pick(['wide', 'rect', 'frown', 'O'])); break; }
@@ -984,6 +985,8 @@ function gMouth(m) {
     case 'none': issue = false; break;
     default: if (NEW.mouth[t]) { if (NEW.mouth[t](o, m, my) === false) issue = false; } else oneMouth(o, m, 0, my, t, 1);
   }
+  if (m.mini) issue = false;
+  if (m.mfocus) { NEW.issue.tongues(o, m, my); if (R() < 0.4) NEW.issue[pick(['slime', 'pour', 'smokeM'])](o, m, my); issue = false; }
   if (issue) { const it = wp(m, 'none:9|fire:1:medieval china|drool:.8:cartoon|leaves:.8:medieval|' + X.issue.slice(9)); switch (it) {
     default: if (NEW.issue[it]) NEW.issue[it](o, m, my); break;
     case 'fire': for (let i = 0, n = pick([3, 4, 5]); i < n; i++) { const th = Math.PI + (i - (n - 1) / 2) * 0.35, len = rnd(0.2, 0.4); add(o, pc('flame', Math.sin(th) * len / 2, my - Math.cos(th) * len / 2, len * 0.4 * (i % 2 ? -1 : 1), len, th, 8.3, i % 2 ? 'a0' : 'a1', { sw: 2, sf: 3, ph: i, pv: [0, my] })); } break;
@@ -1108,7 +1111,8 @@ function refsFor() {
   if (R() < 0.4) th.push(pick(PLANTS), 'plant');
   if (R() < 0.25) th.push(pick(SCULPT), 'geo');
   if (R() < 0.45) th.push(pick(POP));
-  if (R() < 0.28) th.push(pick(GENDER));   // masculine, feminine, drag, queer signs worn together
+  if (R() < 0.28) th.push(pick(GENDER));
+  if (th.includes('dread') ? R() < 0.4 : R() < 0.12) th.push(pick(AGGR));   // the aggressive animal face   // masculine, feminine, drag, queer signs worn together
   const r = R(); th.push(r < 0.76 ? 'dread' : r < 0.9 ? 'cute' : 'plain');
   return th;
 }
@@ -1504,6 +1508,65 @@ Object.assign(NEW.extras, {
   bonesE(o, m) { const { bot } = hd(m), n = 7 + 2 * Math.floor(R() * 3); for (let i = 0; i < n; i++) { const u = 2 * i / (n - 1) - 1; add(o, pc('bone', u * (n - 1) * 0.035, bot + 0.03 + 0.12 * (1 - u * u), 0.13, 0.035, u * 0.6 + PI / 2, 1.4, 'bone')); } }
 });
 
+
+/* ================= Aldrovandi, Preciado, the aggressive animal face, the fixed face that only speaks with its mouth, the minimal face =================
+   Aldrovandi's Monstrorum historia (1642): woodcuts with hatched shadows, three eyes side by side, heads of fox, dragon and eagle
+   on one neck, a human head with huge animal ears, a horned infant with its mouth wide open, a hog-fish with many eyes, many-horned
+   deer, cyclopes, dragons, the growths of the first recorded neurofibromatosis.
+   Preciado (Can the Monster Speak?, Testo Junkie): the monster that speaks from its cage, like Kafka's ape Red Peter; a body that
+   changes with molecules; prostheses; masks; signs of gender recomposed.
+   The aggressive animal face (dogs, cats, primates, snakes, birds): muzzle wrinkled, lip pulled up in a C over the canines, ears pinned
+   back, whiskers drawn back, a hard fixed stare, pupils dilated or pinned, fur bristling, the open threat gape of baboon, hippo, snake. */
+const ALDREF = {
+  aldrovandi: 'hatch row hydra eleears many growths scream', polyceros: 'many antlers hatch', cyclops: 'one hatch sunken', hogfish: 'snout hscales extraeyes hatch',
+  cynocephalus: 'snout ears fangs hatch snarlwrinkle', harpy: 'feathers beakopen wig hatch', dragonA: 'horns batwings fire hscales fangmaw hatch', hornedinfant: 'scream horns doll hatch',
+  preciado: 'molecule prosthesis halfmask cage beard lipstick', redpeter: 'muzzle humanears cage halfmask', testo: 'molecule beard stubble thickB'
+};
+const AGGREF = {
+  angrywolf: 'snarlwrinkle earsback hackles glare fangs snarl canineyawn', hissingcat: 'hiss earsback glare whisk pin', baboonthreat: 'canineyawn glare mandrill thickB',
+  hippothreat: 'hippo wrinkles tapir', cottonmouthA: 'cottonmouth slitsN flick scales', raptor: 'beakopen glare crestfan hook', gorilla: 'canineyawn thickB glare wrinkles',
+  bear: 'snarlwrinkle canineyawn ears glare', frilledlizard: 'frill hiss cottonmouth', angrydog: 'snarlwrinkle earsback glare snarl fangs'
+};
+for (const T of [ALDREF, AGGREF]) { Object.assign(REF, T); for (const k in T) REFW[k] = new Set(T[k].split(' ')); }
+POP.push(...Object.keys(ALDREF));
+const AGGR = Object.keys(AGGREF);
+Object.assign(X, {
+  back: X.back + '|hackles:1.2:dread|molecule:.6',
+  side: X.side + '|earsback:1.3:dread',
+  eye: X.eye + '|glare:1.8:dread',
+  mouth: X.mouth + '|canineyawn:1.6:dread|hiss:1.4:dread|cottonmouth:1.1:dread|hippo:.9:dread|beakopen:.8',
+  marks: X.marks + '|hatch:1|snarlwrinkle:1.4:dread|prosthesis:.7|halfmask:.8'
+});
+Object.assign(NEW.back, {
+  hackles(o, m) { const n = 40 + Math.floor(R() * 30); for (let i = 0; i < n; i++) { const th = i / n * TAU + rnd(-0.04, 0.04), len = rnd(0.1, 0.32), [x, y] = radial(m, th, len * 0.5, 0.9); add(o, pc('tri', x, y, 0.035, len, th, 0.5, i % 3 ? 'top' : 'top2', { pul: 0.12, ph: i * 0.3 })); } },
+  molecule(o, m) { const L = rnd(0.09, 0.13), s3 = Math.sqrt(3) * L, cx = rnd(-0.5, 0.2), cy = m.head.top - rnd(0.05, 0.25), C = [[0, 0], [s3, 0], [s3 * 1.5, -1.5 * L], [s3 * 2.5, -1.5 * L]], bond = (x1, y1, x2, y2) => add(o, pc('rect', (x1 + x2) / 2, (y1 + y2) / 2, 0.012, Math.hypot(x2 - x1, y2 - y1), Math.atan2(x2 - x1, y1 - y2), 0.5, 'halo')); for (const [ox, oy] of C) for (let k = 0; k < 6; k++) { const a1 = -PI / 2 + k * PI / 3, a2 = a1 + PI / 3; bond(cx + ox + Math.cos(a1) * L, cy + oy + Math.sin(a1) * L, cx + ox + Math.cos(a2) * L, cy + oy + Math.sin(a2) * L); } const [ex, ey] = [cx + C[3][0] + L, cy + C[3][1] - L * 0.6]; bond(ex - L, ey + L * 0.6, ex + L * 0.4, ey - L * 0.4); add(o, pc('ellipse', ex + L * 0.6, ey - L * 0.6, L * 0.5, L * 0.5, 0, 0.52, 'halo2')); add(o, pc('ellipse', cx - L * 1.4, cy + L * 0.8, L * 0.5, L * 0.5, 0, 0.52, 'halo2')); }
+});
+Object.assign(NEW.side, {
+  earsback(o, m) { const { w: hw } = hd(m), w = rnd(0.3, 0.42), h = rnd(0.11, 0.16), y = rnd(-0.25, -0.1); S2(o, 'tri', hw / 2 + w * 0.3, y, h, w, PI / 2 + rnd(0.15, 0.4), 1, 'top', { sw: 0.25, sf: 3 }); S2(o, 'tri', hw / 2 + w * 0.3, y + 0.01, h * 0.5, w * 0.6, PI / 2 + 0.3, 1.1, 'earIn', { sw: 0.25, sf: 3 }); }
+});
+Object.assign(NEW.eye, {
+  glare(a, r, st, B, G, sx, rot, ec) { a('almond', 0, 0, r * 2.5, r * 1.3, rot, 6, 'ball', B); a('ellipse', 0, 0, r * 0.95, r * 0.95, 0, 7, 'iris', G(0.15)); a('ellipse', 0, 0, st.dil = st.dil || (R() < 0.5 ? r * 0.75 : r * 0.2), st.dil, 0, 8, 'black', G(0.15)); a('rect', 0, -r * 0.62, r * 2.9, r * 0.9, -0.38 * sx, 9.5, 'lid', { ec }); a('rect', -sx * r * 0.2, -r * 1.25, r * 2.2, r * 0.14, -0.38 * sx, 9.55, 'mark2', { ec }); }
+});
+Object.assign(NEW.mouth, {
+  canineyawn(o, m, my) { const a = mA(o, my), w = rnd(0.3, 0.42), h = rnd(0.36, 0.5), y = my + 0.06; a('almondV', 0, y, w * 1.2, h * 1.12, 0, 6, 'lip'); a('ellipse', 0, y, w, h, 0, 6.5, 'black'); a('semi', 0, y - h * 0.36, w * 0.98, h * 0.3, 0, 7, 'gum'); a('bowl', 0, y + h * 0.36, w * 0.9, h * 0.28, 0, 7, 'gum'); for (const s of [-1, 1]) { a('trid', s * w * 0.3, y - h * 0.12, w * 0.12, h * 0.48, s * 0.08, 8.2, 'tooth'); a('tri', s * w * 0.26, y + h * 0.18, w * 0.1, h * 0.34, -s * 0.08, 8.2, 'tooth'); } for (let j = 0; j < 4; j++) a('sq', (j - 1.5) * w * 0.1, y - h * 0.3, w * 0.08, h * 0.08, 0, 8.1, 'tooth2'); if (R() < 0.5) tongue(o, 0, y + h * 0.1, h * 0.35, w * 0.2, 7.5, 'plain', 0, { mc: my, sw: 0.3 }); return false; },
+  hiss(o, m, my) { const a = mA(o, my), w = rnd(0.3, 0.4), h = rnd(0.2, 0.28); a('heart', 0, my + h * 0.1, w, -h, 0, 6.5, 'black'); a('ellipse', 0, my + h * 0.3, w * 0.45, h * 0.35, 0, 7, 'gum'); for (const s of [-1, 1]) { a('trid', s * w * 0.27, my - h * 0.05, w * 0.07, h * 0.5, 0, 8.2, 'tooth'); a('tri', s * w * 0.2, my + h * 0.35, w * 0.06, h * 0.32, 0, 8.2, 'tooth'); for (const j of [-1, 0, 1]) a('rect', s * (w * 0.75), my - 0.04 + j * 0.03, w * 0.6, 0.008, -s * (0.35 + j * 0.12), 7.5, 'brow'); } return false; },
+  cottonmouth(o, m, my) { const a = mA(o, my), w = rnd(0.4, 0.55), h = rnd(0.34, 0.48), y = my + 0.05; a('diamond', 0, y, w * 1.08, h * 1.08, 0, 6, 'black'); a('diamond', 0, y, w, h, 0, 6.5, 'white'); a('ellipse', 0, y + h * 0.12, w * 0.12, h * 0.2, 0, 6.6, 'black'); for (const s of [-1, 1]) a('horn', s * w * 0.14, y - h * 0.24, -s * w * 0.06, h * 0.3, 0, 8.2, 'tooth2', { p: { curl: 0.4 } }); NEW.issue.flick(o, m, y + h * 0.1); return false; },
+  hippo(o, m, my) { const a = mA(o, my), w = rnd(0.48, 0.6), h = rnd(0.38, 0.5), y = my + 0.08; a('sq', 0, y, w * 1.08, h * 1.08, 0, 6, 'lip', { p: { e: 4 } }); a('sq', 0, y, w, h, 0, 6.5, 'gum', { p: { e: 4 } }); a('ellipse', 0, y + h * 0.05, w * 0.5, h * 0.5, 0, 6.6, 'black'); for (const s of [-1, 1]) { a('tri', s * w * 0.36, y + h * 0.1, w * 0.12, h * 0.75, s * 0.12, 8.2, 'tooth'); a('trid', s * w * 0.3, y - h * 0.38, w * 0.07, h * 0.2, 0, 8.2, 'tooth'); } a('ellipse', 0, y + h * 0.25, w * 0.35, h * 0.2, 0, 7, 'tongue'); return false; },
+  beakopen(o, m, my) { const a = mA(o, my), w = rnd(0.26, 0.36), h = rnd(0.36, 0.5); a('diamond', 0, my, w * 0.9, h, 0, 6.5, 'black'); a('trid', 0, my - h * 0.3, w, h * 0.42, 0, 8.6, 'nose'); a('tri', 0, my + h * 0.34, w * 0.8, -h * 0.36, 0, 8.6, 'lip'); tongue(o, 0, my, h * 0.3, w * 0.15, 7, pick(['fork', 'plain']), 0, { mc: my, sw: 0.4 }); return false; }
+});
+Object.assign(NEW.marks, {
+  hatch(o, m) { const { w: hw, h: hh } = hd(m), ang = rnd(-0.6, 0.6), cross = R() < 0.35, cx = pick([-1, 1]) * hw * rnd(0.12, 0.25), cy = 0.02 + rnd(-0.1, 0.25) * hh, W = hw * rnd(0.35, 0.55), H = hh * rnd(0.4, 0.7), n = 12 + Math.floor(R() * 10); for (const a0 of (cross ? [ang, ang + 1.2] : [ang])) for (let i = 0; i < n; i++) { const u = (i + 0.5) / n * 2 - 1, L = H * Math.sqrt(1 - u * u); add(o, pc('rect', cx + Math.cos(a0) * u * W / 2, cy + Math.sin(a0) * u * W / 2, 0.006, L, a0, 3.95, 'shade')); } },
+  snarlwrinkle(o, m) { for (let j = 0; j < 4; j++) S2(o, 'crescent', 0.06 + j * 0.012, 0.03 + j * 0.035, 0.12 - j * 0.01, 0.05, -0.5 - j * 0.1, 7.4, 'shade', { p: { T: 0.18, q: 0.2, fl: 1 }, pul: 0.06, ph: j }); for (const dx of [-0.02, 0.02]) add(o, pc('rect', dx, -0.03, 0.009, 0.08, dx * 8, 7.4, 'shade')); },
+  prosthesis(o, m) { const { w: hw, h: hh } = hd(m), sg = pick([-1, 1]), lowP = R() < 0.5, x = sg * hw * rnd(0.12, 0.25), y = lowP ? 0.02 + hh * 0.3 : -0.02, W = hw * rnd(0.35, 0.5), H = hh * rnd(0.2, 0.32), ty = pick(['rect', 'trap', 'sq']); add(o, pc(ty, x, y, W, H, rnd(-0.2, 0.2), 4.65, pick(['h3', 'orn', 'white']))); for (let i = 0; i < 6; i++) add(o, pc('ellipse', x + (i % 3 - 1) * W * 0.38, y + (i < 3 ? -1 : 1) * H * 0.36, 0.025, 0.025, 0, 4.7, 'black')); add(o, pc('ellipse', x - sg * W * 0.5, y, 0.07, 0.07, 0, 4.7, 'orn2')); add(o, pc('ellipse', x - sg * W * 0.5, y, 0.03, 0.03, 0, 4.71, 'black')); },
+  halfmask(o, m) { const { w: hw, h: hh } = hd(m), sg = pick([-1, 1]), upper = R() < 0.5; if (upper) add(o, pc(pick(['semi', 'shield', 'trap']), 0, -0.1, hw * 0.98, hh * 0.32, 0, 4.7, pick(['white', 'mark', 'h3']))); else add(o, pc('semi', sg * hw * 0.22, 0.02, hh * 0.85, hw * 0.44, sg * PI / 2, 4.7, pick(['white', 'mark', 'h3']))); add(o, pc('rect', 0, -0.1, hw * 1.15, 0.015, 0, 4.69, 'black')); }
+});
+// the fixed face that works only with its mouth and tongue, open and frightening
+const MFOC = 'maw:3|fangmaw:3|hellmouth:1.5|scream:2|gulper:1.5|unhinged:2|tusked:2|lamprey:1.5|baconscream:1.5|gums:1.5|canineyawn:2|hiss:2|cottonmouth:1.5|hippo:1.5|beakopen:1|trijaw:1|flytrap:1';
+// the minimal face: almost nothing, and frightening
+const MINI = { lay: 'two:5|one:1.5|close:1.2|mismatch:1|missing:.8|tiny:1|huge:1|low:1', eye: 'void:2|hole:2|sclera:2|pin:1.5|sunken:2|bar:1|dot:1|slit:1|blank:1|human:1', mouth: 'smilecut:2|glasgow:1.5|holeM:1.5|slit:1|vertical:1|rictus:1|unhinged:1|mouthless:1.2|curve:1|bar:1|tiny:1|cheekteeth:1|lipless:1' };
+const MINIK = new Set(['head', 'eyes', 'mouth']);
+function regenAll(m) { for (const k of ['head', 'back', 'side', 'top', 'marks', 'eyes', 'brows', 'nose', 'app', 'mouth', 'extras']) gen(m, k); }
+
 /* colours by role, from a scheme that can change on its own; sometimes only one or two colours */
 function scheme() {
   const r = R(), h1 = pick(HUES), h2 = pick(HUES.filter(c => c !== h1));
@@ -1547,7 +1610,7 @@ function tf(q, s, ox, oy, px, py) {
   if (q.sway) q.sway *= s;
 }
 function gen(m, k) {
-  const one = () => GEN[k](m);
+  const one = () => m.mini && !MINIK.has(k) && !(k === 'nose' && m.mini === 2) ? mk() : GEN[k](m);
   if (!m.twin) m.raw[k] = one();
   else if (k === 'eyes') { const a = one(), ea = m.eyes, b = one(); m.eyes2 = [ea, m.eyes]; m.raw[k] = [a, b]; }
   else if (k === 'brows') { const e = m.eyes2 || [m.eyes, m.eyes]; m.eyes = e[0]; const a = one(); m.eyes = e[1]; m.raw[k] = [a, one()]; }
@@ -1567,6 +1630,7 @@ function place(m, k) {
         if (m.off && k === 'nose') q.x -= m.off;
         if (m.stretch !== 1) { const d = (q.y - 0.07) * (m.stretch - 1); q.y += d; if (q.ec) q.ec = [q.ec[0], q.ec[1] + d]; if (q.pv) q.pv = [q.pv[0], q.pv[1] + d]; if (q.mc !== undefined) q.mc += d; }
         if (m.droop) { const dy = q => q * m.droop; q.y += dy(q.x); q.r += m.droop * 0.7; if (q.ec) q.ec = [q.ec[0], q.ec[1] + dy(q.ec[0])]; if (q.pv) q.pv = [q.pv[0], q.pv[1] + dy(q.pv[0])]; }
+        if (m.mfocus && k === 'mouth') tf(q, 1.3, 0, 0.02, 0, 0.25);
         if (m.inv) { const P = 0.08; q.x = -q.x; q.y = 2 * P - q.y; q.r += Math.PI; if (q.ec) q.ec = [-q.ec[0], 2 * P - q.ec[1]]; if (q.pv) q.pv = [-q.pv[0], 2 * P - q.pv[1]]; if (q.mc !== undefined) q.mc = 2 * P - q.mc; }
       }
       if (s !== 1) tf(q, s, ox, 0, 0, 0.02);
@@ -1619,6 +1683,8 @@ function newMonster(prev) {
   m.vocab = vocabOf(m); m.shadow = R() < (m.th.includes('dread') ? 0.07 : 0.015);
   distort(m);
   m.wire = R() < 0.07; if (m.wire) m.shadow = false;
+  m.mini = R() < 0.1 ? (R() < 0.3 ? 2 : 1) : 0;
+  m.mfocus = !m.mini && R() < 0.1;
   if (m.th.includes('cubist') ? R() < 0.7 : R() < 0.05) { m.tilt = rnd(-0.3, 0.3); m.off = rnd(-0.07, 0.07); }
   for (const k of ['head', 'back', 'side', 'top', 'marks', 'eyes', 'brows', 'nose', 'app', 'mouth', 'extras']) gen(m, k);
   paint(m);
@@ -1627,6 +1693,12 @@ function newMonster(prev) {
 // the monster never stops changing: a feature, a colour, a reference at a time
 function mutate(m) {
   const regen = k => gen(m, k);
+  if (m.mfocus) {   // the face stays still: only the mouth and the tongues change
+    if (R() < 0.07) m.mfocus = false;
+    else { regen('mouth'); if (R() < 0.25) regen('app'); if (R() < 0.12) { const ns = scheme(); for (const k of SKEYS[4]) m.s[k] = ns[k]; } paint(m); return; }
+  }
+  if (m.mini ? R() < 0.06 : R() < 0.015) { m.mini = m.mini ? 0 : 1; m.mfocus = false; regenAll(m); paint(m); return; }   // stripped to almost nothing, or back to complexity
+  if (!m.mini && R() < 0.02) m.mfocus = true;
   const one = () => {
     const r = R();
     if (r < 0.16) { const ns = scheme(), keys = pick(SKEYS) || Object.keys(ns); for (const k of keys) m.s[k] = ns[k]; }
@@ -1643,7 +1715,7 @@ function mutate(m) {
     else { regen('head'); for (const k of HEADDEP) regen(k); for (const k of FEAT) place(m, k); }
   };
   if (R() < 0.2) {   // the references drift: another animal, a plant, a sculptor comes in
-    const i = m.th.findIndex(x => REF[x] || TH.includes(x)), pool = R() < 0.25 ? POP : R() < 0.6 ? ANIMALS : R() < 0.6 ? PLANTS : R() < 0.5 ? SCULPT : TH;
+    const i = m.th.findIndex(x => REF[x] || TH.includes(x)), pool = R() < 0.12 ? AGGR : R() < 0.25 ? POP : R() < 0.6 ? ANIMALS : R() < 0.6 ? PLANTS : R() < 0.5 ? SCULPT : TH;
     if (i >= 0) m.th[i] = pick(pool); if (pool === PLANTS && !m.th.includes('plant')) m.th.push('plant'); if (pool === SCULPT && !m.th.includes('geo')) m.th.push('geo');
   }
   if (R() < 0.05) { m.vocab = m.vocab ? null : vocabOf(m) || pick(['circles', 'kand', 'tris']); for (const k of GROUPS) place(m, k); }
@@ -1785,6 +1857,7 @@ function uncanny(t, dt) {
   Lf.zoom = 1 + (k === 'loom' ? 0.45 * EASE.inOutSine(env) : 0);
   if (k === 'tilt') Lf.rot += ep.a * EASE.outQuart(env);
   if (k === 'twitch') { Lf.rot += 0.045 * Math.sin(t * 47) * env; Lf.dx += 0.012 * Math.sin(t * 61) * env; }
+  if (M && M.mfocus) { Lf.rot *= 0.15; Lf.dx *= 0.15; Lf.dy *= 0.15; Lf.mouth = Math.max(0.3, 1 + (Lf.mouth - 1) * 2.2 + 0.7 * Math.max(0, Math.sin(ft * 0.7))); }
   if (k === 'gape') Lf.mouth = lerp(Lf.mouth, dread ? 3.1 : 2.3, EASE.inOutCubic(env));
 }
 const blinkOf = (ex) => {
