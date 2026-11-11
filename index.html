@@ -26,7 +26,7 @@
 <aside id="info">
   <h1>MOSTRAI</h1>
   <p>A single monstrous face, always new.</p>
-  <p>Its genome mixes a bestiary: strange, monstrous and ordinary animals (anglerfish, bats, mandrills, star-nosed moles, axolotls, spiders, mantises, octopuses, lampreys), plants and fungi (flytraps, rafflesia, lotus pods, cordyceps, mandrakes), and sculpture (Brancusi, Moore, Calder, Giacometti, Fontana). Sometimes it turns into pure geometry. It insists on what makes a face frightening: eyes with too much white or none at all, sunken sockets, mouths cut too wide, jaws hanging too long, faces too long, features sliding or upside down, stillness and then a snap. Other voices enter the flow: Francis Bacon, Giulia Cenci, vampires and stitched creatures of novels, films and comics, frightening clowns, strange children, the man with the growths, the devils of medieval frescoes, gargoyles, the demons of anime, zombies; masculine, feminine and queer signs worn together; the opened body of Monique Wittig's <i>Le corps lesbien</i>. Tongues, teeth, bones, gills, wounds, mucus, smoke. Sometimes the monster is only lines. Then Ulisse Aldrovandi's woodcuts of monsters, with their hatching; Paul B. Preciado's monster that speaks from its cage; the threat faces of animals — wrinkled muzzles, lips pulled over the canines, ears pinned back, bristling fur, the open gape. At times the face stays still and only the mouth and its tongues move; at times almost everything is taken away. It watches you.</p>
+  <p>Its genome mixes a bestiary: strange, monstrous and ordinary animals (anglerfish, bats, mandrills, star-nosed moles, axolotls, spiders, mantises, octopuses, lampreys), plants and fungi (flytraps, rafflesia, lotus pods, cordyceps, mandrakes), and sculpture (Brancusi, Moore, Calder, Giacometti, Fontana). Sometimes it turns into pure geometry. It insists on what makes a face frightening: eyes with too much white or none at all, sunken sockets, mouths cut too wide, jaws hanging too long, faces too long, features sliding or upside down, stillness and then a snap. Other voices enter the flow: Francis Bacon, Giulia Cenci, vampires and stitched creatures of novels, films and comics, frightening clowns, strange children, the man with the growths, the devils of medieval frescoes, gargoyles, the demons of anime, zombies; masculine, feminine and queer signs worn together; the opened body of Monique Wittig's <i>Le corps lesbien</i>. Tongues, teeth, bones, gills, wounds, mucus, smoke. Sometimes the monster is only lines. Then Ulisse Aldrovandi's woodcuts of monsters, with their hatching; Paul B. Preciado's monster that speaks from its cage; the threat faces of animals — wrinkled muzzles, lips pulled over the canines, ears pinned back, bristling fur, the open gape. Insects too: their legs growing out of the face, things crawling across it, eggs, larvae, swarms, nests, cocoons, and everything filamentous — silk, cobwebs, hairs, cilia. At times the face stays still and only the mouth and its tongues move; at times almost everything is taken away. It watches you.</p>
   <p>The machine invents a monster and never stops changing it: a face made of geometric shapes in the three primary colours, white and black, on a ground that changes colour too. It mixes the grammar of many monsters without copying any: Mesoamerican and Andean masks, Amazonian feather crowns, Caribbean carnival, the demon faces of India, Sri Lanka and Bali, Himalayan masks, oni and yokai, anime, taotie and opera faces, African and Oceanic masks, gorgons, medieval grotesques, commedia and carnival, skulls, cartoons, robots, aliens, insects, sea creatures, cubism, Miró, the Bauhaus, pixels, the first idols. Eyes, horns, crowns, teeth, tongues, beaks, ears and tentacles are reinvented at every moment, while the face breathes, blinks, looks around, chews and sways, at ever-changing speeds and rhythms.</p>
   <p><i>monstrum</i>: from <i>monere</i>, to warn. Cicero heard in it <i>monstrare</i>, to show.</p>
   <p>A project by Jacopo Natoli, 2026</p>
@@ -1112,7 +1112,8 @@ function refsFor() {
   if (R() < 0.25) th.push(pick(SCULPT), 'geo');
   if (R() < 0.45) th.push(pick(POP));
   if (R() < 0.28) th.push(pick(GENDER));
-  if (th.includes('dread') ? R() < 0.4 : R() < 0.12) th.push(pick(AGGR));   // the aggressive animal face   // masculine, feminine, drag, queer signs worn together
+  if (th.includes('dread') ? R() < 0.4 : R() < 0.12) th.push(pick(AGGR));
+  if (R() < 0.38) th.push(pick(INSECTS), 'insect');   // insects, their legs, their swarming, and filaments   // the aggressive animal face   // masculine, feminine, drag, queer signs worn together
   const r = R(); th.push(r < 0.76 ? 'dread' : r < 0.9 ? 'cute' : 'plain');
   return th;
 }
@@ -1567,6 +1568,73 @@ const MINI = { lay: 'two:5|one:1.5|close:1.2|mismatch:1|missing:.8|tiny:1|huge:1
 const MINIK = new Set(['head', 'eyes', 'mouth']);
 function regenAll(m) { for (const k of ['head', 'back', 'side', 'top', 'marks', 'eyes', 'brows', 'nose', 'app', 'mouth', 'extras']) gen(m, k); }
 
+
+/* ================= insects and filaments =================
+   Strange insects (dobsonflies, giraffe weevils, cicadas, plumed moths, stick insects, lice, botflies, termites), their legs
+   growing out of the face and twitching; the disgust of insects: things crawling across the face, clusters of eggs, larvae and
+   grubs, swarms of flies, wasp nests and combs, cocoons of silk; and everything filamentous: silk threads, cobwebs, hanging hairs,
+   cilia waving in waves, filaments rising like hyphae. */
+const INSREF = {
+  dobsonfly: 'mandiblesX insectlegs antennae compound', giraffeweevil: 'trunk antennae elytra insectlegs', mothplume: 'antennaeF eyespots hairs coiltongue',
+  cicada: 'compound elytra insectlegs mandiblesX', louse: 'insectlegs crawlers eggs hairs', botfly: 'larvae eggs swarm compound larvaeM',
+  waspnestR: 'waspnest comb swarm mandiblesX', termites: 'comb crawlers mandiblesX larvae', cocoonR: 'cocoon silk larvae', silkworm: 'cocoon silk larvae hairs',
+  flyswarm: 'swarm crawlers eggs fliesM', caterpillar: 'hairs larvae eyespots cilia', stickinsect: 'insectlegs antennae filtop', eggeyed: 'eggeye eggs crawlers',
+  ciliate: 'cilia filtop silk', slimemold: 'silk filtop mucus slime', hyphae: 'silk cobweb filtop hairs'
+};
+Object.assign(REF, INSREF); for (const k in INSREF) REFW[k] = new Set(INSREF[k].split(' '));
+const INSECTS = Object.keys(INSREF);
+Object.assign(X, {
+  back: X.back + '|insectlegs:1.6:insect dread|swarm:1:insect dread|waspnest:.7:insect|silk:1.2:dread|cilia:.9',
+  side: X.side + '|elytra:.9:insect',
+  top: X.top + '|antennaeF:1:insect|filtop:1.1:dread',
+  eye: X.eye + '|eggeye:1:insect dread',
+  mouth: X.mouth + '|mandiblesX:1.6:insect dread',
+  issue: X.issue + '|larvaeM:1.4:insect dread|fliesM:1.2:insect dread',
+  marks: X.marks + '|crawlers:1.6:insect dread|eggs:1.2:insect dread|larvae:1.2:insect dread|comb:1:insect|cocoon:.9:insect dread|cobweb:1:dread',
+  extras: X.extras + '|hairs:1.3:dread'
+});
+// a fly: black body, white wings
+function fly(o, x, y, s, z, ex) { add(o, pc('ellipse', x, y, s, s * 1.3, 0, z, 'black', ex)); for (const sg of [-1, 1]) add(o, pc('ellipse', x + sg * s * 0.6, y - s * 0.4, s * 0.9, s * 0.55, sg * 0.5, z - 0.001, 'white', ex)); }
+// a small insect walking across the face
+function crawler(o, cx, cy, a, D, sp, ph, s, z, role) { const A = { crawl: [a, D, sp], ph }, c = Math.cos(a), sn = Math.sin(a), at = (u, v) => [cx + c * u - sn * v, cy + sn * u + c * v]; let p = at(-s * 0.9, 0); add(o, pc('ellipse', p[0], p[1], s * 1.5, s, a, z, role, A)); p = at(s * 0.3, 0); add(o, pc('ellipse', p[0], p[1], s * 0.7, s * 0.6, a, z, role, A)); p = at(s * 0.85, 0); add(o, pc('ellipse', p[0], p[1], s * 0.45, s * 0.45, 0, z, role, A)); for (const u of [-0.25, 0.3, 0.8]) for (const sg of [-1, 1]) { p = at(s * u, sg * s * 0.7); add(o, pc('rect', p[0], p[1], s * 0.1, s * 1.1, a + sg * 0.3, z - 0.001, role, A)); } for (const sg of [-1, 1]) { p = at(s * 1.35, sg * s * 0.3); add(o, pc('rect', p[0], p[1], s * 0.07, s * 0.8, a + PI / 2 - sg * 0.5, z - 0.001, role, A)); } }
+// a grub: segments that wriggle from the head
+function grub(o, x, y, th, n, s, z, role, ex) { let cx = x, cy = y; for (let k = 0; k < n; k++) { const d = s * (1 - Math.abs(k - n * 0.4) / (n * 1.2)); add(o, pc('ellipse', cx, cy, d, d * 0.8, th, z - k * 0.001, role, Object.assign({ sw: 0.25 + k * 0.08, sf: 2.4, ph: -k * 0.6, pv: [x, y] }, ex))); cx += Math.sin(th) * s * 0.55; cy -= Math.cos(th) * s * 0.55; } add(o, pc('ellipse', x, y, s * 0.45, s * 0.45, 0, z + 0.001, 'black', Object.assign({ sw: 0.25, sf: 2.4, pv: [x, y] }, ex))); }
+Object.assign(NEW.back, {
+  insectlegs(o, m) { const n = pick([2, 3, 3, 4]); for (const sg of [-1, 1]) for (let i = 0; i < n; i++) { const th = sg * (PI / 2 + (i - (n - 1) / 2) * 0.45 + rnd(-0.08, 0.08)), [bx, by] = radial(m, th, 0, 0.9), A = { sw: rnd(0.12, 0.3), sf: rnd(3, 6), ph: i * 1.7 + (sg > 0 ? 0.9 : 0), pv: [bx, by] }, w = rnd(0.018, 0.03), [kx, ky] = seg(o, bx, by, th - sg * rnd(0.4, 0.8), rnd(0.25, 0.4), w * 1.3, 0.5, 'top', A), t2 = th + sg * rnd(0.9, 1.4), [ex, ey] = seg(o, kx, ky, t2, rnd(0.3, 0.48), w, 0.5, 'top', A); for (let j = 1; j < 4; j++) add(o, pc('tri', lerp(kx, ex, j / 4) + Math.cos(t2) * 0.012 * sg, lerp(ky, ey, j / 4) + Math.sin(t2) * 0.012 * sg, 0.012, 0.04, t2 - sg * 0.9, 0.49, 'top', A)); const [fx, fy] = seg(o, ex, ey, t2 + sg * 0.5, rnd(0.08, 0.14), w * 0.7, 0.5, 'top', A); add(o, pc('horn', fx, fy, sg * 0.03, 0.06, t2 + sg * 0.9, 0.5, 'top', A)); } },
+  swarm(o, m) { for (let i = 0, n = 18 + Math.floor(R() * 26); i < n; i++) { const a = R() * TAU, rad = Rm_(m) * rnd(0.55, 1.15); fly(o, Math.sin(a) * rad, 0.02 - Math.cos(a) * rad, rnd(0.018, 0.035), 9.8, { pv: [0, 0.02], orb: rnd(0.3, 1.3) * pick([-1, 1]) }); } },
+  waspnest(o, m) { const { top } = hd(m), W = Rm_(m) * rnd(1.1, 1.4), H = W * rnd(1.1, 1.4), cy = top + H * 0.15, n = 8 + Math.floor(R() * 5); add(o, pc('egg', 0, cy, W, H, PI, 0.28, 'halo')); for (let i = 0; i < n; i++) { const y = cy - H / 2 + (i + 0.5) * H / n, wv = W * Math.sqrt(Math.max(0.05, 1 - Math.pow((y - cy) / (H / 2), 2))); add(o, pc('crescent', 0, y, wv * 0.96, H / n * 0.9, 0, 0.29 + i * 0.001, i % 2 ? 'halo2' : 'top2', { p: { T: 0.3, q: 0.05, fl: 1 } })); } add(o, pc('ellipse', 0, cy + H * 0.44, W * 0.12, W * 0.1, 0, 0.3, 'black')); },
+  silk(o, m) { for (let i = 0, n = 15 + Math.floor(R() * 20); i < n; i++) add(o, pc('rect', rnd(-0.4, 0.4), 0.02 + rnd(-0.4, 0.4), 0.004, rnd(0.9, 2), R() * PI, 0.35, pick(['slime', 'bone', 'halo']), { sw: 0.12, sf: rnd(0.2, 0.5), ph: i })); },
+  cilia(o, m) { const n = 50 + Math.floor(R() * 40), L = rnd(0.06, 0.14); for (let i = 0; i < n; i++) { const th = i / n * TAU, [x, y] = radial(m, th, L / 2, 0.98); add(o, pc('rect', x, y, 0.007, L, th, 0.5, 'top', { sw: 2.2, sf: 2.5, ph: i * 0.35, pv: radial(m, th, 0, 0.98) })); } }
+});
+Object.assign(NEW.side, {
+  elytra(o, m) { const { w: hw, h: hh } = hd(m), H = hh * rnd(0.9, 1.2), W = hw * rnd(0.35, 0.5); S2(o, 'almond', hw * 0.55, 0.1, W * 1.3, H * 0.8, 0.35, 0.7, 'white', { sw: 0.3, sf: 5, pv: [hw * 0.4, -0.1] }); S2(o, 'almondV', hw * 0.42, 0.06, W, H, 0.2, 0.8, 'top'); S2(o, 'rect', hw * 0.42, 0.06, 0.012, H * 0.9, 0.2, 0.81, 'black'); if (R() < 0.6) for (let j = 0; j < 3; j++) S2(o, 'ellipse', hw * 0.47, -0.15 + j * H * 0.25, W * 0.25, W * 0.25, 0, 0.82, 'top2'); }
+});
+Object.assign(NEW.top, {
+  antennaeF(o, m) { const { w: hw, top } = hd(m), H = rnd(0.45, 0.7), r = rnd(0.3, 0.6); S2(o, 'frond', hw * 0.12 + Math.sin(r) * H / 2, top + 0.04 - Math.cos(r) * H / 2, H * 0.32, H, r, 1, 'top', { p: { n: 12 }, sw: 0.5, sf: 0.8, pv: [hw * 0.12, top + 0.04] }); S2(o, 'rect', hw * 0.12 + Math.sin(r) * H / 2, top + 0.04 - Math.cos(r) * H / 2, 0.012, H, r, 1.01, 'top2', { sw: 0.5, sf: 0.8, pv: [hw * 0.12, top + 0.04] }); },
+  filtop(o, m) { for (let i = 0, n = 14 + Math.floor(R() * 20); i < n; i++) { const th = rnd(-1.4, 1.4), L = rnd(0.25, 0.75), [x, y] = radial(m, th, L / 2, 0.92), A = { sw: 0.9, sf: rnd(0.5, 1.2), ph: i * 0.4, pv: radial(m, th, 0, 0.92) }; add(o, pc('rect', x, y, 0.006, L, th, 1, pick(['top', 'slime', 'top2']), A)); if (R() < 0.35) { const [tx, ty] = radial(m, th, L, 0.92); add(o, pc('ellipse', tx, ty, 0.03, 0.03, 0, 1.01, 'slime', A)); } } }
+});
+Object.assign(NEW.eye, {
+  eggeye(a, r, st, B, G, sx, rot, ec) { a('ellipse', 0, 0, r * 2.6, r * 2.4, rot, 5, 'black', { ec }); for (let i = 0, n = 9 + Math.floor(R() * 8); i < n; i++) { const an = i * 2.39996, rad = r * 0.3 * Math.sqrt(i + 0.3); a('ellipse', Math.cos(an) * rad, Math.sin(an) * rad, r * 0.55, r * 0.7, an, 6, 'bone', { ec, pul: 0.05, ph: i }); } }
+});
+Object.assign(NEW.mouth, {
+  mandiblesX(o, m, my) { const a = mA(o, my), w = rnd(0.3, 0.42); a('rect', 0, my, w * 0.5, 0.05, 0, 6.5, 'black'); a('trap', 0, my - 0.06, w * 0.5, 0.1, 0, 6.6, 'lip', { p: { k: 0.7 } }); for (const s of [-1, 1]) { a('horn', s * w * 0.3, my + 0.06, -s * w * 0.32, rnd(0.18, 0.28), s * 0.9, 8.6, 'top', { p: { curl: 1 }, sw: 0.5, sf: 2.5, sgn: s, pv: [s * w * 0.32, my] }); let px = s * w * 0.4, py = my + 0.02; for (let k = 0; k < 3; k++) { [px, py] = seg(o, px, py, PI - s * (0.4 + k * 0.3), 0.08, 0.03, 8.5, 'lip', { mc: my, sw: 0.6, sf: 3, ph: k, pv: [s * w * 0.4, my + 0.02] }); } } }
+});
+Object.assign(NEW.issue, {
+  larvaeM(o, m, my) { for (let i = 0, n = pick([2, 3, 5]); i < n; i++) grub(o, rnd(-0.1, 0.1), my + 0.02, PI + rnd(-0.6, 0.6), 6 + Math.floor(R() * 4), rnd(0.04, 0.06), 8.4, 'bone', { mc: my }); },
+  fliesM(o, m, my) { for (let i = 0, n = 5 + Math.floor(R() * 6); i < n; i++) fly(o, rnd(-0.05, 0.05), my, rnd(0.02, 0.032), 9.8, { rise: [rnd(0.12, 0.3), rnd(0.6, 1.2)], ph: i / n }); }
+});
+Object.assign(NEW.marks, {
+  crawlers(o, m) { const { w: hw, h: hh } = hd(m); for (let i = 0, n = pick([2, 3, 5, 8]); i < n; i++) crawler(o, rnd(-0.25, 0.25) * hw, 0.02 + rnd(-0.25, 0.25) * hh, R() * TAU, rnd(0.5, 1.0), rnd(0.03, 0.09), R(), rnd(0.02, 0.035), 9.8, R() < 0.7 ? 'black' : 'shade'); },
+  eggs(o, m) { const { w: hw, h: hh } = hd(m), cx = rnd(-0.32, 0.32) * hw, cy = 0.02 + rnd(-0.35, 0.35) * hh, s = rnd(0.022, 0.035), role = pick(['bone', 'slime', 'bone']); for (let i = 0, n = 15 + Math.floor(R() * 25); i < n; i++) { const an = i * 2.39996, rad = s * 0.62 * Math.sqrt(i + 0.3); add(o, pc('ellipse', cx + Math.cos(an) * rad, cy + Math.sin(an) * rad, s, s * 1.3, an, 4.5, role, { pul: 0.04, ph: i })); } },
+  larvae(o, m) { const { w: hw, h: hh } = hd(m); for (let i = 0, n = pick([1, 2, 3, 4]); i < n; i++) grub(o, rnd(-0.32, 0.32) * hw, 0.02 + rnd(-0.35, 0.35) * hh, R() * TAU, 6 + Math.floor(R() * 4), rnd(0.04, 0.065), 9.75, 'bone'); },
+  comb(o, m) { const { w: hw, h: hh } = hd(m), cx = rnd(-0.25, 0.25) * hw, cy = 0.02 + rnd(-0.3, 0.3) * hh, s = rnd(0.05, 0.07), rr = rnd(2, 3.2); for (let i = -4; i <= 4; i++) for (let j = -4; j <= 4; j++) { const x = cx + (i + (j % 2 ? 0.5 : 0)) * s * 0.92, y = cy + j * s * 0.8; if (Math.hypot((x - cx) / s, (y - cy) / s) > rr) continue; add(o, pc('poly', x, y, s, s, PI / 2, 4.4, 'mark', { p: regP(6) })); add(o, pc('poly', x, y, s * 0.7, s * 0.7, PI / 2, 4.41, pick(['bg', 'black', 'bone', 'black']), { p: regP(6) })); } },
+  cocoon(o, m) { const { w: hw, h: hh } = hd(m); for (let i = 0, n = 18 + Math.floor(R() * 18); i < n; i++) add(o, pc('rect', rnd(-0.2, 0.2) * hw, 0.02 + rnd(0.05, 0.42) * hh, 0.006, hw * rnd(0.6, 1.0), PI / 2 + rnd(-0.6, 0.6), 9.7, pick(['bone', 'slime']))); },
+  cobweb(o, m) { const th = R() * TAU, [cx, cy] = radial(m, th, 0, 0.95), n = 6, L = rnd(0.3, 0.5), role = pick(['bone', 'white', 'slime']), dir = th + PI, pts = []; for (let i = 0; i < n; i++) { const a = dir + (i / (n - 1) - 0.5) * 1.8, e = [cx + Math.sin(a) * L, cy - Math.cos(a) * L]; add(o, pc('rect', (cx + e[0]) / 2, (cy + e[1]) / 2, 0.004, L, a, 9.75, role)); pts.push(a); } for (let k = 1; k <= 3; k++) for (let i = 0; i < n - 1; i++) { const r1 = L * k / 3.4, x1 = cx + Math.sin(pts[i]) * r1, y1 = cy - Math.cos(pts[i]) * r1, x2 = cx + Math.sin(pts[i + 1]) * r1, y2 = cy - Math.cos(pts[i + 1]) * r1; add(o, pc('rect', (x1 + x2) / 2, (y1 + y2) / 2, 0.004, Math.hypot(x2 - x1, y2 - y1), Math.atan2(x2 - x1, y1 - y2), 9.75, role)); } }
+});
+Object.assign(NEW.extras, {
+  hairs(o, m) { for (let i = 0, n = 20 + Math.floor(R() * 25); i < n; i++) { const th = PI / 2 + R() * PI, [x, y] = radial(m, th, 0, 0.95), L = rnd(0.25, 0.9); add(o, pc('rect', x, y + L / 2, 0.006, L, 0, 1.4, pick(['top', 'top2', 'slime']), { sw: 0.35, sf: rnd(0.4, 0.9), ph: i * 0.3, pv: [x, y] })); } }
+});
+
 /* colours by role, from a scheme that can change on its own; sometimes only one or two colours */
 function scheme() {
   const r = R(), h1 = pick(HUES), h2 = pick(HUES.filter(c => c !== h1));
@@ -1715,7 +1783,7 @@ function mutate(m) {
     else { regen('head'); for (const k of HEADDEP) regen(k); for (const k of FEAT) place(m, k); }
   };
   if (R() < 0.2) {   // the references drift: another animal, a plant, a sculptor comes in
-    const i = m.th.findIndex(x => REF[x] || TH.includes(x)), pool = R() < 0.12 ? AGGR : R() < 0.25 ? POP : R() < 0.6 ? ANIMALS : R() < 0.6 ? PLANTS : R() < 0.5 ? SCULPT : TH;
+    const i = m.th.findIndex(x => REF[x] || TH.includes(x)), pool = R() < 0.12 ? INSECTS : R() < 0.12 ? AGGR : R() < 0.25 ? POP : R() < 0.6 ? ANIMALS : R() < 0.6 ? PLANTS : R() < 0.5 ? SCULPT : TH;
     if (i >= 0) m.th[i] = pick(pool); if (pool === PLANTS && !m.th.includes('plant')) m.th.push('plant'); if (pool === SCULPT && !m.th.includes('geo')) m.th.push('geo');
   }
   if (R() < 0.05) { m.vocab = m.vocab ? null : vocabOf(m) || pick(['circles', 'kand', 'tris']); for (const k of GROUPS) place(m, k); }
@@ -1934,6 +2002,7 @@ function drawPiece(d, t) {
   if (m.orb) { const a = ft * m.orb, c = Math.cos(a), sn = Math.sin(a), dx = x - m.pv[0], dy = y - m.pv[1]; x = m.pv[0] + dx * c - dy * sn; y = m.pv[1] + dx * sn + dy * c; r += a; }
   if (m.sway) x += Math.sin(ft * 1.6 + (m.ph || 0)) * m.sway * cur.tent;
   if (m.spin) r += ft * m.spin;
+  if (m.crawl) { const [a, D, sp] = m.crawl, u = (((ft * sp + (m.ph || 0)) % 1) + 1) % 1, k = Math.min(1, Math.sin(Math.PI * u) * 5); x += Math.cos(a) * (u - 0.5) * D + Math.sin(ft * 31 + (m.ph || 0) * 9) * 0.003; y += Math.sin(a) * (u - 0.5) * D; w *= k; h *= k; }
   if (m.rise) { const u = (((ft * m.rise[0] + (m.ph || 0)) % 1) + 1) % 1, k = Math.sin(Math.PI * u) * (1 + u); y -= u * m.rise[1]; x += Math.sin(u * 5 + (m.ph || 0) * 7) * Math.abs(m.rise[1]) * 0.12; w *= k; h *= k; }
   if (m.pul) { const k = 1 + m.pul * Math.sin(ft * 2.3 + (m.ph || 0)); w *= k; h *= k; }
   const fs = Lf.fs, fc = Math.cos(Lf.rot), fsn = Math.sin(Lf.rot);
