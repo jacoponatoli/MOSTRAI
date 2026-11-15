@@ -32,7 +32,7 @@ body.showcam #voltovid { opacity: 1; }
   <p>A single monstrous face, always new.</p>
   <p>Its genome mixes a bestiary: strange, monstrous and ordinary animals (anglerfish, bats, mandrills, star-nosed moles, axolotls, spiders, mantises, octopuses, lampreys), plants and fungi (flytraps, rafflesia, lotus pods, cordyceps, mandrakes), and sculpture (Brancusi, Moore, Calder, Giacometti, Fontana). Sometimes it turns into pure geometry. It insists on what makes a face frightening: eyes with too much white or none at all, sunken sockets, mouths cut too wide, jaws hanging too long, faces too long, features sliding or upside down, stillness and then a snap. Other voices enter the flow: Francis Bacon, Giulia Cenci, vampires and stitched creatures of novels, films and comics, frightening clowns, strange children, the man with the growths, the devils of medieval frescoes, gargoyles, the demons of anime, zombies; masculine, feminine and queer signs worn together; the opened body of Monique Wittig's <i>Le corps lesbien</i>. Tongues, teeth, bones, gills, wounds, mucus, smoke. Sometimes the monster is only lines. Then Ulisse Aldrovandi's woodcuts of monsters, with their hatching; Paul B. Preciado's monster that speaks from its cage; the threat faces of animals — wrinkled muzzles, lips pulled over the canines, ears pinned back, bristling fur, the open gape. The grotesque body: genital forms of carnival and the margins, a little foot growing from the head, parts implanted in the wrong place. Insects too: their legs growing out of the face, things crawling across it, eggs, larvae, swarms, nests, cocoons, and everything filamentous — silk, cobwebs, hairs, cilia. At times the face stays still and only the mouth and its tongues move; at times almost everything is taken away. It watches you.</p>
   <p>With <i>?luce</i> in the address, or the key L, the camera measures the light: the colours become iridescent, waves of hue running across the shapes, faster and wider with more light, surging at every change of light; covering it, everything sinks into black. C recalibrates, V shows the camera.</p>
-  <p>With <i>?volto</i>, or the key M, the monster stops and becomes a mirror of the face in front of the camera: head, eyes, blinks, mouth, smile, brows, tongue (read by MediaPipe Face Landmarker). K recalibrates on the face at rest.</p>
+  <p>With <i>?volto</i>, or the key M, the monster stops and becomes a mirror of the face in front of the camera: head, eyes, blinks, mouth, smile, brows, tongue (read by MediaPipe Face Landmarker). K recalibrates on the face at rest. The visitor's hands, when they enter the frame, become monstrous hands that keep changing as they move: claws, tentacles, webbed, bones, thorns, eyes on the fingertips, a mouth in the palm.</p>
   <p>The machine invents a monster and never stops changing it: a face made of geometric shapes in the three primary colours, white and black, on a ground that changes colour too. It mixes the grammar of many monsters without copying any: Mesoamerican and Andean masks, Amazonian feather crowns, Caribbean carnival, the demon faces of India, Sri Lanka and Bali, Himalayan masks, oni and yokai, anime, taotie and opera faces, African and Oceanic masks, gorgons, medieval grotesques, commedia and carnival, skulls, cartoons, robots, aliens, insects, sea creatures, cubism, Miró, the Bauhaus, pixels, the first idols. Eyes, horns, crowns, teeth, tongues, beaks, ears and tentacles are reinvented at every moment, while the face breathes, blinks, looks around, chews and sways, at ever-changing speeds and rhythms.</p>
   <p><i>monstrum</i>: from <i>monere</i>, to warn. Cicero heard in it <i>monstrare</i>, to show.</p>
   <p>A project by Jacopo Natoli, 2026</p>
@@ -2127,6 +2127,8 @@ function frame() {
   bgUpdate(t);
   luce(t, dt);
   render(t);
+  handsTick(t, dt);
+  drawHands(t);
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
@@ -2249,11 +2251,12 @@ async function faceStart() {
     const files = await vision.FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@' + MP_VER + '/wasm');
     const opts = d => ({ baseOptions: { modelAssetPath: MP_MODEL, delegate: d }, runningMode: 'VIDEO', numFaces: 1, outputFaceBlendshapes: true });
     try { FACE.fl = await vision.FaceLandmarker.createFromOptions(files, opts('GPU')); } catch (e) { FACE.fl = await vision.FaceLandmarker.createFromOptions(files, opts('CPU')); }
+    handsLoad(vision, files);
   } catch (e) { console.warn('volto', e); faceStop(); }
 }
 function faceStop() {
   try { FACE.track && FACE.track.stop(); FACE.video && FACE.video.remove(); } catch (e) {}
-  FACE.on = false; FACE.fl = null; FACE.video = null; FACE.track = null; mutNext = now() + 1;
+  FACE.on = false; HANDS.list = []; FACE.fl = null; FACE.video = null; FACE.track = null; mutNext = now() + 1;
 }
 const P2 = (L, i) => L[i];
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -2307,6 +2310,7 @@ function faceTick(t, dt) {
           jaw: r.jaw, mw: clamp(Math.pow(r.mw / B.mw, 2.2), 0.55, 1.8), brow: clamp(r.brow - B.brow, -1, 1), tongue: faceTongue(L, r.jaw)
         };
         FACE.seen = t;
+        const vw = v.videoWidth, vh = v.videoHeight; FACE.anchor = { x: L[1].x * vw, y: L[1].y * vh, fw: Math.hypot((L[454].x - L[234].x) * vw, (L[454].y - L[234].y) * vh) || vw * 0.28 };
       }
     }
   }
@@ -2334,6 +2338,82 @@ function ensureTongue(m) {
   place(m, 'mouth'); paint(m); T = targetsOf(m); retarget(now(), { dur: [0.3, 0.6], stagger: 0.2, eases: ['inOutSine'], pattern: ['out'] });
 }
 if (/[?&]volto\b/.test(location.search)) faceStart();
+
+/* ================= the hands: only in the mirror (M), the visitor's hands become monstrous hands =================
+   MediaPipe Hand Landmarker finds up to two hands; each is redrawn in front of the stopped monster, at the scale of the face,
+   and while it moves it keeps turning into something else, finger after finger: claws, tentacles, webbed, bones, thorns,
+   eyes on the fingertips and a mouth in the palm, doubled fingers. */
+const HM_MODEL = 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
+const HSTY = ['claw', 'tentacle', 'webbed', 'bone', 'thorn', 'eyes', 'double', 'claw', 'tentacle'];
+const HANDS = { hl: null, last: -1, odd: false, list: [] };   // list: { pts: [[x,y]...] in monster units, seen, sty: [5], tgt, travel, next, mouth }
+const FING = [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16], [17, 18, 19, 20]];
+async function handsLoad(vision, files) {
+  const o = d => ({ baseOptions: { modelAssetPath: HM_MODEL, delegate: d }, runningMode: 'VIDEO', numHands: 2 });
+  try { HANDS.hl = await vision.HandLandmarker.createFromOptions(files, o('GPU')); } catch (e) { try { HANDS.hl = await vision.HandLandmarker.createFromOptions(files, o('CPU')); } catch (e2) {} }
+}
+function handsTick(t, dt) {
+  if (!FACE.on || !HANDS.hl || !FACE.video || FACE.video.readyState < 2) { if (!FACE.on) HANDS.list = []; return; }
+  HANDS.odd = !HANDS.odd; if (HANDS.odd) return;   // every other frame is enough
+  const v = FACE.video, vw = v.videoWidth, vh = v.videoHeight; if (!vw) return;
+  let res = null; try { res = HANDS.hl.detectForVideo(v, performance.now() + 0.5); } catch (e) { return; }
+  const A = FACE.anchor || { x: vw / 2, y: vh * 0.45, fw: vw * 0.28 }, k = (M && M.head ? M.head.w : 0.8) / A.fw;
+  const found = (res && res.landmarks) || [];
+  for (const L of found) {
+    const pts = L.map(p => [-(p.x * vw - A.x) * k, (p.y * vh - A.y) * k + 0.08]);   // mirrored, as in a mirror
+    let best = null, bd = 0.5;
+    for (const h of HANDS.list) { const d = Math.hypot(h.pts[0][0] - pts[0][0], h.pts[0][1] - pts[0][1]); if (d < bd && h.seen !== t) { bd = d; best = h; } }
+    if (!best) { const s0 = pick(HSTY); best = { pts, seen: t, sty: [s0, s0, s0, s0, s0], tgt: s0, travel: 0, ph: R() * 9 }; HANDS.list.push(best); }
+    else { const a = 1 - Math.exp(-dt * 2 * 18); let mv = 0; for (let i = 0; i < 21; i++) { const q = best.pts[i]; mv += Math.hypot(pts[i][0] - q[0], pts[i][1] - q[1]); q[0] += (pts[i][0] - q[0]) * a; q[1] += (pts[i][1] - q[1]) * a; } best.travel += mv / 21; best.seen = t; }
+  }
+  HANDS.list = HANDS.list.filter(h => t - h.seen < 0.4);
+  for (const h of HANDS.list) {   // while it moves it changes, one finger after another
+    if (h.travel > 0.55) { h.travel = 0; h.tgt = pick(HSTY.filter(s => s !== h.tgt)); h.next = t; h.fi = 0; }
+    if (h.next !== undefined && t >= h.next && h.fi < 5) { h.sty[h.fi++] = h.tgt; h.next = t + 0.09; }
+  }
+}
+function drawHands(t) {
+  if (!FACE.on || !HANDS.list.length || !M) return;
+  const sx = x => CX + (x + Lf.dx) * S, sy = y => CY + (y + Lf.dy) * S, s = M.s;
+  const c1 = CC(s.top || 'red'), c2 = CC(s.top2 || s.h2 || 'yellow'), cn = CC(s.tooth || 'white'), cb = 'black';
+  ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const line = (a, b, w, col) => { ctx.strokeStyle = col; ctx.lineWidth = Math.max(1, w * S); ctx.beginPath(); ctx.moveTo(sx(a[0]), sy(a[1])); ctx.lineTo(sx(b[0]), sy(b[1])); ctx.stroke(); };
+  const dot = (p, r, col) => { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(sx(p[0]), sy(p[1]), Math.max(0.5, r * S), 0, TAU); ctx.fill(); };
+  const poly = (P, col) => { ctx.fillStyle = col; ctx.beginPath(); P.forEach((p, i) => i ? ctx.lineTo(sx(p[0]), sy(p[1])) : ctx.moveTo(sx(p[0]), sy(p[1]))); ctx.closePath(); ctx.fill(); };
+  for (const h of HANDS.list) {
+    const P = h.pts, size = Math.hypot(P[9][0] - P[0][0], P[9][1] - P[0][1]) || 0.2, W = size * 0.22;
+    // webbing first, behind the fingers
+    for (let f = 1; f < 5; f++) if (h.sty[f] === 'webbed' || h.sty[f - 1] === 'webbed') { const a = FING[f - 1], b = FING[f]; poly([P[a[0]], P[a[2]], P[a[3]], [(P[a[3]][0] + P[b[3]][0]) / 2, (P[a[3]][1] + P[b[3]][1]) / 2 + size * 0.05], P[b[3]], P[b[2]], P[b[0]]], c2); }
+    poly([P[0], P[1], P[5], P[9], P[13], P[17]], c1);   // palm
+    line(P[0], [(P[5][0] + P[17][0]) / 2, (P[5][1] + P[17][1]) / 2], W * 1.6, c1);
+    FING.forEach((F, f) => {
+      const st = h.sty[f], base = P[F[0]], tip = P[F[3]], dir = Math.atan2(tip[1] - P[F[2]][1], tip[0] - P[F[2]][0]), seg = Math.hypot(tip[0] - P[F[2]][0], tip[1] - P[F[2]][1]) || 0.02, w = W * (f === 0 ? 1.1 : 0.9);
+      const drawF = (rot) => {
+        const R2 = p => { if (!rot) return p; const dx = p[0] - base[0], dy = p[1] - base[1], c = Math.cos(rot), n = Math.sin(rot); return [base[0] + dx * c - dy * n, base[1] + dx * n + dy * c]; };
+        const J = F.map(i => R2(P[i]));
+        if (st === 'tentacle') {   // the finger goes on, longer, waving, with suckers
+          let px = J[0][0], py = J[0][1], a = Math.atan2(J[3][1] - J[0][1], J[3][0] - J[0][0]); const len = Math.hypot(J[3][0] - J[0][0], J[3][1] - J[0][1]) * 2.1, n = 12;
+          for (let k = 0; k < n; k++) { a += 0.35 * Math.sin(t * 4 + h.ph + f + k * 0.6) / 3; const nx = px + Math.cos(a) * len / n, ny = py + Math.sin(a) * len / n, ww = w * (1.2 - k / n); line([px, py], [nx, ny], ww, c1); if (k % 2 && k < n - 2) dot([px, py], ww * 0.25, c2); px = nx; py = ny; }
+          return;
+        }
+        if (st === 'bone') { for (let k = 0; k < 3; k++) { line(J[k], J[k + 1], w * 0.35, cn); dot(J[k], w * 0.38, cn); } dot(J[3], w * 0.3, cn); return; }
+        for (let k = 0; k < 3; k++) line(J[k], J[k + 1], w * (1 - k * 0.12), c1);
+        const T = J[3], d2 = Math.atan2(J[3][1] - J[2][1], J[3][0] - J[2][0]);
+        if (st === 'claw') { const L = seg * 1.6, e = [T[0] + Math.cos(d2) * L, T[1] + Math.sin(d2) * L], nrm = [-Math.sin(d2) * w * 0.4, Math.cos(d2) * w * 0.4]; poly([[T[0] + nrm[0], T[1] + nrm[1]], [T[0] - nrm[0], T[1] - nrm[1]], [e[0] + nrm[0] * 0.6, e[1] + nrm[1] * 0.6 + w * 0.2]], cn); }
+        if (st === 'thorn') for (let k = 0; k < 3; k++) { const a = J[k], b = J[k + 1], m2 = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], dd = Math.atan2(b[1] - a[1], b[0] - a[0]) - Math.PI / 2, L = w * 0.9; poly([[m2[0] - Math.cos(dd + 1.57) * w * 0.2, m2[1] - Math.sin(dd + 1.57) * w * 0.2], [m2[0] + Math.cos(dd + 1.57) * w * 0.2, m2[1] + Math.sin(dd + 1.57) * w * 0.2], [m2[0] + Math.cos(dd) * L, m2[1] + Math.sin(dd) * L]], cn); }
+        if (st === 'eyes') { dot(T, w * 0.75, 'white'); const g = Math.sin(t * 2 + f) * w * 0.2; dot([T[0] + g, T[1]], w * 0.32, cb); }
+        if (st === 'webbed' || st === 'double') dot(T, w * 0.45, c2);
+      };
+      drawF(0);
+      if (st === 'double') { drawF(0.32); drawF(-0.32); }
+    });
+    if (h.sty.filter(x => x === 'eyes').length >= 3) {   // a mouth opens in the palm
+      const c = [(P[0][0] + P[9][0]) / 2, (P[0][1] + P[9][1]) / 2], open = 0.35 + 0.35 * Math.max(0, Math.sin(t * 3 + h.ph));
+      ctx.fillStyle = cb; ctx.beginPath(); ctx.ellipse(sx(c[0]), sy(c[1]), size * 0.28 * S, size * 0.2 * open * S, 0, 0, TAU); ctx.fill();
+      for (let k = 0; k < 6; k++) { const x = c[0] + (k - 2.5) * size * 0.08; poly([[x - size * 0.03, c[1] - size * 0.2 * open], [x + size * 0.03, c[1] - size * 0.2 * open], [x, c[1] - size * 0.05 * open]], cn); }
+    }
+  }
+  ctx.restore();
+}
 
 /* ================= interface: nothing on screen ================= */
 const info = $('info');
@@ -2378,7 +2458,7 @@ const wake = () => { document.body.classList.remove('idle'); clearTimeout(idleTo
 addEventListener('mousemove', wake); wake();
 
 // for inspection from the console
-window.MONSTRUM = { FACE, faceStart, faceStop, LUX, luceStart, luceStop, disp, get M() { return M; }, get mood() { return mood; }, setMood: m => setMood(m, now()), next: () => { mutNext = 0; }, photo, bg, newMonster, mutate, COL, set: mm => { M = mm; T = targetsOf(M); fit(); retarget(now(), MOODS[mood]); } };
+window.MONSTRUM = { HANDS, FACE, faceStart, faceStop, LUX, luceStart, luceStop, disp, get M() { return M; }, get mood() { return mood; }, setMood: m => setMood(m, now()), next: () => { mutNext = 0; }, photo, bg, newMonster, mutate, COL, set: mm => { M = mm; T = targetsOf(M); fit(); retarget(now(), MOODS[mood]); } };
 })();
 </script>
 </body>
