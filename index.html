@@ -17,6 +17,8 @@
   #flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none}
   #flash.on{animation:flash .45s ease-out}
   @keyframes flash{from{opacity:.55}to{opacity:0}}
+#lucevid { position: fixed; right: 12px; bottom: 12px; width: 160px; height: 120px; transform: scaleX(-1); opacity: 0; pointer-events: none; z-index: 5; }
+body.showcam #lucevid { opacity: 1; }
 </style>
 </head>
 <body>
@@ -27,6 +29,7 @@
   <h1>MOSTRAI</h1>
   <p>A single monstrous face, always new.</p>
   <p>Its genome mixes a bestiary: strange, monstrous and ordinary animals (anglerfish, bats, mandrills, star-nosed moles, axolotls, spiders, mantises, octopuses, lampreys), plants and fungi (flytraps, rafflesia, lotus pods, cordyceps, mandrakes), and sculpture (Brancusi, Moore, Calder, Giacometti, Fontana). Sometimes it turns into pure geometry. It insists on what makes a face frightening: eyes with too much white or none at all, sunken sockets, mouths cut too wide, jaws hanging too long, faces too long, features sliding or upside down, stillness and then a snap. Other voices enter the flow: Francis Bacon, Giulia Cenci, vampires and stitched creatures of novels, films and comics, frightening clowns, strange children, the man with the growths, the devils of medieval frescoes, gargoyles, the demons of anime, zombies; masculine, feminine and queer signs worn together; the opened body of Monique Wittig's <i>Le corps lesbien</i>. Tongues, teeth, bones, gills, wounds, mucus, smoke. Sometimes the monster is only lines. Then Ulisse Aldrovandi's woodcuts of monsters, with their hatching; Paul B. Preciado's monster that speaks from its cage; the threat faces of animals — wrinkled muzzles, lips pulled over the canines, ears pinned back, bristling fur, the open gape. The grotesque body: genital forms of carnival and the margins, a little foot growing from the head, parts implanted in the wrong place. Insects too: their legs growing out of the face, things crawling across it, eggs, larvae, swarms, nests, cocoons, and everything filamentous — silk, cobwebs, hairs, cilia. At times the face stays still and only the mouth and its tongues move; at times almost everything is taken away. It watches you.</p>
+  <p>With <i>?luce</i> in the address, or the key L, the camera measures the light: covering it, every colour sinks along its own hue towards black; more light, and they rise towards white. C recalibrates, V shows the camera.</p>
   <p>The machine invents a monster and never stops changing it: a face made of geometric shapes in the three primary colours, white and black, on a ground that changes colour too. It mixes the grammar of many monsters without copying any: Mesoamerican and Andean masks, Amazonian feather crowns, Caribbean carnival, the demon faces of India, Sri Lanka and Bali, Himalayan masks, oni and yokai, anime, taotie and opera faces, African and Oceanic masks, gorgons, medieval grotesques, commedia and carnival, skulls, cartoons, robots, aliens, insects, sea creatures, cubism, Miró, the Bauhaus, pixels, the first idols. Eyes, horns, crowns, teeth, tongues, beaks, ears and tentacles are reinvented at every moment, while the face breathes, blinks, looks around, chews and sways, at ever-changing speeds and rhythms.</p>
   <p><i>monstrum</i>: from <i>monere</i>, to warn. Cicero heard in it <i>monstrare</i>, to show.</p>
   <p>A project by Jacopo Natoli, 2026</p>
@@ -2114,10 +2117,71 @@ function frame() {
   camera(dt);
   update(t);
   bgUpdate(t);
+  luce(t, dt);
   render(t);
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
+
+/* ================= the light sensor: the camera measures the light and the colours follow it =================
+   Open with ?luce, or press L. The camera only measures the average brightness of what it sees: nothing is shown or recorded.
+   Less light (a hand coming close to the lens) and every colour sinks along its own hue towards black; more light than the room
+   (a lamp, a phone torch) and every colour rises towards white. C recalibrates on the light of the room, V shows the camera. */
+const COL0 = Object.assign({}, COL);
+const hex2 = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const RGB0 = {}; for (const k in COL0) RGB0[k] = hex2(COL0[k]);
+const LUX = { on: false, video: null, track: null, cv: null, cx: null, raw: 0.5, base: 0, s: 0, cal: 0, samples: [], next: 0 };
+function luceTone(v) {   // v from -1 (black) to +1 (light)
+  for (const k in RGB0) {
+    const c = RGB0[k], q = v < 0 ? c.map(x => x * (1 + v)) : c.map(x => x + (255 - x) * v);
+    COL[k] = '#' + q.map(x => Math.round(clamp(x, 0, 255)).toString(16).padStart(2, '0')).join('');
+  }
+}
+async function luceStart() {
+  if (LUX.on) return;
+  try {
+    const st = await navigator.mediaDevices.getUserMedia({ video: { width: 160, height: 120 }, audio: false });
+    const v = document.createElement('video'); v.muted = true; v.playsInline = true; v.autoplay = true; v.srcObject = st; v.id = 'lucevid';
+    document.body.appendChild(v); await v.play();
+    LUX.video = v; LUX.track = st.getVideoTracks()[0];
+    LUX.cv = document.createElement('canvas'); LUX.cv.width = 32; LUX.cv.height = 24; LUX.cx = LUX.cv.getContext('2d', { willReadFrequently: true });
+    LUX.on = true; luceCal(1.4);
+  } catch (e) {}
+}
+function luceStop() {
+  if (!LUX.on) return;
+  try { LUX.track.stop(); LUX.video.remove(); } catch (e) {}
+  LUX.on = false; LUX.s = 0; luceTone(0);
+}
+// learn the light of the room; after the camera has adjusted, try to lock its exposure, so that a hand really darkens it
+function luceCal(delay) {
+  LUX.base = 0; LUX.samples = []; LUX.cal = now() + (delay || 0.6);
+  setTimeout(() => { try { const c = LUX.track.getCapabilities ? LUX.track.getCapabilities() : {}, s = LUX.track.getSettings(); if (c.exposureMode && c.exposureMode.includes('manual') && s.exposureTime) LUX.track.applyConstraints({ advanced: [{ exposureMode: 'manual', exposureTime: s.exposureTime }] }).catch(() => {}); } catch (e) {} }, (delay || 0.6) * 700);
+}
+function luce(t, dt) {
+  if (!LUX.on || LUX.video.readyState < 2) return;
+  if (t >= LUX.next) {
+    LUX.next = t + 1 / 20;
+    try {
+      LUX.cx.drawImage(LUX.video, 0, 0, 32, 24);
+      const d = LUX.cx.getImageData(0, 0, 32, 24).data; let sum = 0;
+      for (let i = 0; i < d.length; i += 4) sum += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
+      LUX.raw = sum / (d.length / 4) / 255;
+    } catch (e) {}
+  }
+  if (!LUX.base) {   // calibration on the light of the room
+    if (t > LUX.cal - 0.6) LUX.samples.push(LUX.raw);
+    if (t >= LUX.cal && LUX.samples.length) LUX.base = clamp(LUX.samples.reduce((a, b) => a + b, 0) / LUX.samples.length, 0.06, 0.85);
+    return;
+  }
+  const b = LUX.base, l = LUX.raw, dz = 0.12;   // a small dead zone: in the light of the room the colours stay pure
+  let v = 0;
+  if (l < b) { const u = clamp((1 - l / b - dz) / (1 - dz), 0, 1); v = -Math.pow(u, 0.75); }
+  else { const u = clamp(((l - b) / Math.max(0.05, 0.98 - b) - dz) / (1 - dz), 0, 1); v = 0.9 * Math.pow(u, 0.8); }
+  LUX.s += (v - LUX.s) * (1 - Math.exp(-dt * 7));
+  luceTone(LUX.s);
+}
+if (/[?&]luce\b/.test(location.search)) luceStart();
 
 /* ================= interface: nothing on screen ================= */
 const info = $('info');
@@ -2151,13 +2215,16 @@ addEventListener('keydown', e => {
   else if (k === 'f') fullscreen();
   else if (k === 'i') info.classList.toggle('open');
   else if (k === 'escape') info.classList.remove('open');
+  else if (k === 'l') LUX.on ? luceStop() : luceStart();
+  else if (k === 'c' && LUX.on) luceCal();
+  else if (k === 'v' && LUX.on) document.body.classList.toggle('showcam');
 });
 let idleTo;
 const wake = () => { document.body.classList.remove('idle'); clearTimeout(idleTo); idleTo = setTimeout(() => document.body.classList.add('idle'), 2000); };
 addEventListener('mousemove', wake); wake();
 
 // for inspection from the console
-window.MONSTRUM = { disp, get M() { return M; }, get mood() { return mood; }, setMood: m => setMood(m, now()), next: () => { mutNext = 0; }, photo, bg, newMonster, mutate, COL, set: mm => { M = mm; T = targetsOf(M); fit(); retarget(now(), MOODS[mood]); } };
+window.MONSTRUM = { LUX, luceStart, luceStop, disp, get M() { return M; }, get mood() { return mood; }, setMood: m => setMood(m, now()), next: () => { mutNext = 0; }, photo, bg, newMonster, mutate, COL, set: mm => { M = mm; T = targetsOf(M); fit(); retarget(now(), MOODS[mood]); } };
 })();
 </script>
 </body>
