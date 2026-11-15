@@ -31,7 +31,7 @@ body.showcam #voltovid { opacity: 1; }
   <h1>MOSTRAI</h1>
   <p>A single monstrous face, always new.</p>
   <p>Its genome mixes a bestiary: strange, monstrous and ordinary animals (anglerfish, bats, mandrills, star-nosed moles, axolotls, spiders, mantises, octopuses, lampreys), plants and fungi (flytraps, rafflesia, lotus pods, cordyceps, mandrakes), and sculpture (Brancusi, Moore, Calder, Giacometti, Fontana). Sometimes it turns into pure geometry. It insists on what makes a face frightening: eyes with too much white or none at all, sunken sockets, mouths cut too wide, jaws hanging too long, faces too long, features sliding or upside down, stillness and then a snap. Other voices enter the flow: Francis Bacon, Giulia Cenci, vampires and stitched creatures of novels, films and comics, frightening clowns, strange children, the man with the growths, the devils of medieval frescoes, gargoyles, the demons of anime, zombies; masculine, feminine and queer signs worn together; the opened body of Monique Wittig's <i>Le corps lesbien</i>. Tongues, teeth, bones, gills, wounds, mucus, smoke. Sometimes the monster is only lines. Then Ulisse Aldrovandi's woodcuts of monsters, with their hatching; Paul B. Preciado's monster that speaks from its cage; the threat faces of animals — wrinkled muzzles, lips pulled over the canines, ears pinned back, bristling fur, the open gape. The grotesque body: genital forms of carnival and the margins, a little foot growing from the head, parts implanted in the wrong place. Insects too: their legs growing out of the face, things crawling across it, eggs, larvae, swarms, nests, cocoons, and everything filamentous — silk, cobwebs, hairs, cilia. At times the face stays still and only the mouth and its tongues move; at times almost everything is taken away. It watches you.</p>
-  <p>With <i>?luce</i> in the address, or the key L, the camera measures the light: covering it, every colour sinks along its own hue towards black; more light, and they rise towards white. C recalibrates, V shows the camera.</p>
+  <p>With <i>?luce</i> in the address, or the key L, the camera measures the light: the colours become iridescent, waves of hue running across the shapes, faster and wider with more light, surging at every change of light; covering it, everything sinks into black. C recalibrates, V shows the camera.</p>
   <p>With <i>?volto</i>, or the key M, the monster stops and becomes a mirror of the face in front of the camera: head, eyes, blinks, mouth, smile, brows, tongue (read by MediaPipe Face Landmarker). K recalibrates on the face at rest.</p>
   <p>The machine invents a monster and never stops changing it: a face made of geometric shapes in the three primary colours, white and black, on a ground that changes colour too. It mixes the grammar of many monsters without copying any: Mesoamerican and Andean masks, Amazonian feather crowns, Caribbean carnival, the demon faces of India, Sri Lanka and Bali, Himalayan masks, oni and yokai, anime, taotie and opera faces, African and Oceanic masks, gorgons, medieval grotesques, commedia and carnival, skulls, cartoons, robots, aliens, insects, sea creatures, cubism, Miró, the Bauhaus, pixels, the first idols. Eyes, horns, crowns, teeth, tongues, beaks, ears and tentacles are reinvented at every moment, while the face breathes, blinks, looks around, chews and sways, at ever-changing speeds and rhythms.</p>
   <p><i>monstrum</i>: from <i>monere</i>, to warn. Cicero heard in it <i>monstrare</i>, to show.</p>
@@ -2028,8 +2028,8 @@ function bgUpdate(t) {
   if (md.beat) { const P = 60 / bpm; bg.next = beat0 + (Math.floor((t - beat0) / P) + pick([4, 8, 8, 16])) * P; }
   else bg.next = t + rnd(4, 15) / tempo;
 }
-const CC = c => LUX.on ? luceCol(c === 'bg' ? bg.shown : c, c === 'bg' ? 0.5 : PS) : COL[c === 'bg' ? bg.shown : c] || COL.black;
-function drawBg() { ctx.fillStyle = LUX.on ? luceCol(bg.shown, 0.5) : COL[bg.shown]; ctx.fillRect(0, 0, W, H); }
+const CC = c => LUX.on ? (c === 'bg' ? luceCol(bg.shown, 0.5, 0) : luceCol(c, PS)) : COL[c === 'bg' ? bg.shown : c] || COL.black;
+function drawBg() { ctx.fillStyle = LUX.on ? luceCol(bg.shown, 0.5, 0) : COL[bg.shown]; ctx.fillRect(0, 0, W, H); }
 
 /* ================= drawing ================= */
 function piecePath(d, x, y, w, h, r) {
@@ -2042,7 +2042,7 @@ function piecePath(d, x, y, w, h, r) {
   return path;
 }
 function drawPiece(d, t) {
-  PS = d.lux === undefined ? (d.lux = R()) : d.lux;
+  PS = d.lux === undefined ? (d.lux = R()) : d.lux; PPH = d.x * 4.2 + d.y * 3.1 + PS * 2;
   let x = d.x, y = d.y, w = d.w * d.s, h = d.h * d.s, r = d.r;
   const m = d.meta || {};
   if (d.g === 'head') { const k = Lf.hs; x *= k; y = 0.02 + (y - 0.02) * k; w *= k; h *= k; if (m.jw) y += (Lf.mouth - 1) * 0.12; }
@@ -2149,13 +2149,22 @@ const LAD = {
 };
 const LGAIN = { red: [1.1, 1.1], yellow: [0.85, 1.25], blue: [1.3, 0.85], white: [0.8, 1], black: [1, 1.15] };   // [towards dark, towards light]
 let PS = 0.5;   // the sensitivity of the piece being drawn
-function luceCol(c, sens) {
-  const L = LAD[c]; if (!L) return COL0[c] || '#000000';
-  const v = LUX.s, g = LGAIN[c][v < 0 ? 0 : 1], e = Math.abs(v) * g * (0.45 + 1.1 * sens);
-  if (v < 0) { const i = Math.min(L[2].length, Math.floor(e * L[2].length * 1.15)); return i ? L[2][i - 1] : L[1]; }
-  const i = Math.min(L[0].length, Math.floor(e * L[0].length * 1.15)); return i ? L[0][L[0].length - i] : L[1];
+// iridescent: with the light the colours start to turn like a film of oil — waves of hue run across the shapes,
+// faster and wider the more light comes in; every change of light sends a surge through them; in the dark they sink to black
+const HB = { red: [355, 100, 46], yellow: [50, 100, 50], blue: [222, 88, 36], white: [200, 0, 94], black: [260, 100, 3] };
+let PPH = 0;   // the phase of the piece being drawn: where it is on the face
+function luceCol(c, sens, ph) {
+  const b = HB[c]; if (!b) return COL0[c] || '#000000';
+  const ln = (LUX.s + 1) / 2, P = LUX.P, phase = (ph === undefined ? PPH : ph);
+  const hue = b[0] + LUX.H + P * 120 * Math.sin(phase + LUX.W) + P * 40 * Math.sin(phase * 2.3 - LUX.W * 1.7);
+  let sat = b[1], lig = b[2];
+  if (c === 'white') { sat = clamp(10 + 85 * P, 0, 100); lig = 94 - 22 * Math.min(1, P); }
+  if (c === 'black') lig = 3 + 30 * clamp(ln - 0.5, 0, 0.5) * 2 * Math.min(1, P);
+  if (ln < 0.5) lig *= Math.pow(ln / 0.5, 1.15 + 0.6 * sens);          // into the dark, each piece at its own pace
+  else lig += (78 - lig) * (ln - 0.5) / 0.5 * 0.55;
+  return 'hsl(' + ((hue % 360) + 360) % 360 + ',' + sat + '%,' + clamp(lig, 0, 100) + '%)';
 }
-const LUX = { on: false, t0: 0, video: null, track: null, cv: null, cx: null, raw: 0.5, base: 0, s: 0, cal: 0, samples: [], next: 0 };
+const LUX = { on: false, t0: 0, H: 0, W: 0, P: 0, burst: 0, fp: undefined, video: null, track: null, cv: null, cx: null, raw: 0.5, base: 0, s: 0, cal: 0, samples: [], next: 0 };
 function luceTone(v) {   // v from -1 (black) to +1 (light)
   for (const k in RGB0) {
     const c = RGB0[k], q = v < 0 ? c.map(x => x * (1 + v)) : c.map(x => x + (255 - x) * v);
@@ -2176,7 +2185,7 @@ async function luceStart() {
 function luceStop() {
   if (!LUX.on) return;
   try { LUX.track.stop(); LUX.video.remove(); } catch (e) {}
-  LUX.on = false; LUX.s = 0; LUX.f = undefined; luceTone(0);
+  LUX.on = false; LUX.s = 0; LUX.f = undefined; LUX.fp = undefined; LUX.burst = 0; luceTone(0);
 }
 // learn the light of the room; after the camera has adjusted, try to lock its exposure, so that a hand really darkens it
 function luceCal(delay) {
@@ -2193,6 +2202,14 @@ function luce(t, dt) {
       for (let i = 0; i < d.length; i += 4) sum += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
       LUX.raw = sum / (d.length / 4) / 255;
     } catch (e) {}
+  }
+  {   // the iridescence moves with the light: brighter = faster and wider; any change of light = a surge
+    const ln = (LUX.s + 1) / 2, f = LUX.f === undefined ? LUX.raw : LUX.f;
+    if (LUX.fp !== undefined) LUX.burst += Math.abs(f - LUX.fp) / Math.max(0.05, LUX.base || 0.3) * 5;
+    LUX.fp = f; LUX.burst = Math.min(2.5, LUX.burst * Math.exp(-dt * 1.4));
+    LUX.P = clamp(0.2 + 1.1 * Math.pow(ln, 1.4) + 0.6 * LUX.burst, 0, 1.6);
+    LUX.H += dt * (25 * ln + 160 * Math.pow(Math.max(0, ln - 0.5) * 2, 1.5) + 140 * LUX.burst);
+    LUX.W += dt * (0.8 + 3.5 * ln + 6 * LUX.burst);
   }
   if (!LUX.base) {   // calibration on the light of the room (meanwhile the monster stays in the dark)
     if (t > LUX.cal - 0.6) LUX.samples.push(LUX.raw);
