@@ -19,6 +19,8 @@
   @keyframes flash{from{opacity:.55}to{opacity:0}}
 #lucevid { position: fixed; right: 12px; bottom: 12px; width: 160px; height: 120px; transform: scaleX(-1); opacity: 0; pointer-events: none; z-index: 5; }
 body.showcam #lucevid { opacity: 1; }
+#voltovid { position: fixed; left: 12px; bottom: 12px; width: 200px; height: 150px; transform: scaleX(-1); opacity: 0; pointer-events: none; z-index: 5; }
+body.showcam #voltovid { opacity: 1; }
 </style>
 </head>
 <body>
@@ -30,6 +32,7 @@ body.showcam #lucevid { opacity: 1; }
   <p>A single monstrous face, always new.</p>
   <p>Its genome mixes a bestiary: strange, monstrous and ordinary animals (anglerfish, bats, mandrills, star-nosed moles, axolotls, spiders, mantises, octopuses, lampreys), plants and fungi (flytraps, rafflesia, lotus pods, cordyceps, mandrakes), and sculpture (Brancusi, Moore, Calder, Giacometti, Fontana). Sometimes it turns into pure geometry. It insists on what makes a face frightening: eyes with too much white or none at all, sunken sockets, mouths cut too wide, jaws hanging too long, faces too long, features sliding or upside down, stillness and then a snap. Other voices enter the flow: Francis Bacon, Giulia Cenci, vampires and stitched creatures of novels, films and comics, frightening clowns, strange children, the man with the growths, the devils of medieval frescoes, gargoyles, the demons of anime, zombies; masculine, feminine and queer signs worn together; the opened body of Monique Wittig's <i>Le corps lesbien</i>. Tongues, teeth, bones, gills, wounds, mucus, smoke. Sometimes the monster is only lines. Then Ulisse Aldrovandi's woodcuts of monsters, with their hatching; Paul B. Preciado's monster that speaks from its cage; the threat faces of animals — wrinkled muzzles, lips pulled over the canines, ears pinned back, bristling fur, the open gape. The grotesque body: genital forms of carnival and the margins, a little foot growing from the head, parts implanted in the wrong place. Insects too: their legs growing out of the face, things crawling across it, eggs, larvae, swarms, nests, cocoons, and everything filamentous — silk, cobwebs, hairs, cilia. At times the face stays still and only the mouth and its tongues move; at times almost everything is taken away. It watches you.</p>
   <p>With <i>?luce</i> in the address, or the key L, the camera measures the light: covering it, every colour sinks along its own hue towards black; more light, and they rise towards white. C recalibrates, V shows the camera.</p>
+  <p>With <i>?volto</i>, or the key M, the monster stops and becomes a mirror of the face in front of the camera: head, eyes, blinks, mouth, smile, brows, tongue (read by MediaPipe Face Landmarker). K recalibrates on the face at rest.</p>
   <p>The machine invents a monster and never stops changing it: a face made of geometric shapes in the three primary colours, white and black, on a ground that changes colour too. It mixes the grammar of many monsters without copying any: Mesoamerican and Andean masks, Amazonian feather crowns, Caribbean carnival, the demon faces of India, Sri Lanka and Bali, Himalayan masks, oni and yokai, anime, taotie and opera faces, African and Oceanic masks, gorgons, medieval grotesques, commedia and carnival, skulls, cartoons, robots, aliens, insects, sea creatures, cubism, Miró, the Bauhaus, pixels, the first idols. Eyes, horns, crowns, teeth, tongues, beaks, ears and tentacles are reinvented at every moment, while the face breathes, blinks, looks around, chews and sways, at ever-changing speeds and rhythms.</p>
   <p><i>monstrum</i>: from <i>monere</i>, to warn. Cicero heard in it <i>monstrare</i>, to show.</p>
   <p>A project by Jacopo Natoli, 2026</p>
@@ -2044,6 +2047,7 @@ function drawPiece(d, t) {
   const m = d.meta || {};
   if (d.g === 'head') { const k = Lf.hs; x *= k; y = 0.02 + (y - 0.02) * k; w *= k; h *= k; if (m.jw) y += (Lf.mouth - 1) * 0.12; }
   else if (d.g === 'nose') { const k = 1 + 0.04 * Math.sin(ft * 1.7); w *= k; h *= k; }
+  else if (d.g === 'brows' && FACE.on) y += Lf.by || 0;
   if (m.gaze) {
     let gx = Lf.gx, gy = Lf.gy;
     if (Lf.ej) { const s = m.ec ? m.ec[0] * 31 + m.ec[1] * 17 : 0; gx += Lf.ej * 0.7 * Math.sin(tnow * 23 + s); gy += Lf.ej * 0.5 * Math.sin(tnow * 29 + s * 1.7); }   // each eye trembles on its own
@@ -2051,8 +2055,9 @@ function drawPiece(d, t) {
     if (m.gb) { gx = gx * 0.4 + m.gb[0]; gy = gy * 0.4 + m.gb[1]; }
     x += gx * m.gaze * 0.42; y += gy * m.gaze * 0.32;
   }
-  if (m.blink && m.ec) { const b = blinkOf(m.ec[0]); y = m.ec[1] + (y - m.ec[1]) * b; h *= b; }
-  if (m.mc !== undefined) { const k = Lf.mouth; y = m.mc + (y - m.mc) * k; h *= k; }
+  if (m.blink && m.ec) { const b = FACE.on ? (m.ec[0] > 0 ? FACE.v.eR : FACE.v.eL) : blinkOf(m.ec[0]); y = m.ec[1] + (y - m.ec[1]) * b; h *= b; }
+  if (m.ft) { const k = FACE.on ? Lf.tongue || 0 : 0; y = m.mc + (y - m.mc) * k; h *= k; w *= Math.min(1, k * 3); }   // the tongue that comes out with the visitor's
+  if (m.mc !== undefined) { const k = Lf.mouth; y = m.mc + (y - m.mc) * k; h *= k; if (FACE.on) { x *= Lf.mw; w *= Lf.mw; } }
   if (m.sw) {
     const a = (m.sgn || 1) * m.sw * cur.sway * Math.sin(ft * (m.sf || 1.1) + (m.ph || 0));
     if (m.pv) { const c = Math.cos(a), sn = Math.sin(a), dx = x - m.pv[0], dy = y - m.pv[1]; x = m.pv[0] + dx * c - dy * sn; y = m.pv[1] + dx * sn + dy * c; }
@@ -2064,8 +2069,9 @@ function drawPiece(d, t) {
   if (m.crawl) { const [a, D, sp] = m.crawl, u = (((ft * sp + (m.ph || 0)) % 1) + 1) % 1, k = Math.min(1, Math.sin(Math.PI * u) * 5); x += Math.cos(a) * (u - 0.5) * D + Math.sin(ft * 31 + (m.ph || 0) * 9) * 0.003; y += Math.sin(a) * (u - 0.5) * D; w *= k; h *= k; }
   if (m.rise) { const u = (((ft * m.rise[0] + (m.ph || 0)) % 1) + 1) % 1, k = Math.sin(Math.PI * u) * (1 + u); y -= u * m.rise[1]; x += Math.sin(u * 5 + (m.ph || 0) * 7) * Math.abs(m.rise[1]) * 0.12; w *= k; h *= k; }
   if (m.pul) { const k = 1 + m.pul * Math.sin(ft * 2.3 + (m.ph || 0)); w *= k; h *= k; }
+  if (FACE.on) { const pp = PAR[d.g] || 0; x += Lf.yaw * pp; y += Lf.pitch * pp * 0.7; }   // the head turns: the near parts move more than the far ones
   const fs = Lf.fs, fc = Math.cos(Lf.rot), fsn = Math.sin(Lf.rot);
-  const X0 = x * fs, Y0 = y * fs;
+  const X0 = x * fs * (FACE.on ? 1 - 0.22 * Math.abs(Lf.yaw) : 1), Y0 = y * fs * (FACE.on ? 1 - 0.12 * Math.abs(Lf.pitch) : 1);
   const cx = CX + (X0 * fc - Y0 * fsn + Lf.dx) * S, cy = CY + (X0 * fsn + Y0 * fc + Lf.dy) * S;
   const W2 = w * fs * S, H2 = h * fs * S, rr = r + Lf.rot;
   if (Math.abs(W2) < 0.4 || Math.abs(H2) < 0.4) return;
@@ -2115,6 +2121,7 @@ function frame() {
     mutNext = nextMutTime(t);
   }
   life(t, dt);
+  faceTick(t, dt);
   camera(dt);
   update(t);
   bgUpdate(t);
@@ -2203,6 +2210,114 @@ function luce(t, dt) {
 }
 if (/[?&]luce\b/.test(location.search)) luceStart();
 
+/* ================= the mirror: the monster takes the movements of the face in front of the camera =================
+   Open with ?volto, or press M. The monster stops changing and becomes a mask of the face it sees: it turns, tilts, comes closer
+   and moves away with the head, follows the eyes, blinks with each eye, opens the mouth, smiles, raises the brows, puts out the
+   tongue. The face is read by MediaPipe Face Landmarker, loaded from the internet the first time; nothing is shown or recorded.
+   K recalibrates on the face at rest. */
+const MP_VER = '0.10.14';
+const MP_MODEL = 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task';
+const FACE = { on: false, fl: null, video: null, track: null, last: -1, seen: -99, base: null, cal: [], v: null, tcv: null, tcx: null };
+const FV0 = () => ({ yaw: 0, pitch: 0, roll: 0, zoom: 1, gx: 0, gy: 0, eR: 1, eL: 1, jaw: 0, mw: 1, brow: 0, tongue: 0 });
+async function faceStart() {
+  if (FACE.on) return;
+  FACE.on = true; FACE.v = FV0(); FACE.base = null; FACE.cal = [];
+  try {
+    const st = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: 'user' }, audio: false });
+    const v = document.createElement('video'); v.muted = true; v.playsInline = true; v.autoplay = true; v.srcObject = st; v.id = 'voltovid';
+    document.body.appendChild(v); await v.play();
+    FACE.video = v; FACE.track = st.getVideoTracks()[0];
+    FACE.tcv = document.createElement('canvas'); FACE.tcv.width = 48; FACE.tcv.height = 36; FACE.tcx = FACE.tcv.getContext('2d', { willReadFrequently: true });
+    const vision = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@' + MP_VER);
+    const files = await vision.FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@' + MP_VER + '/wasm');
+    const opts = d => ({ baseOptions: { modelAssetPath: MP_MODEL, delegate: d }, runningMode: 'VIDEO', numFaces: 1, outputFaceBlendshapes: true });
+    try { FACE.fl = await vision.FaceLandmarker.createFromOptions(files, opts('GPU')); } catch (e) { FACE.fl = await vision.FaceLandmarker.createFromOptions(files, opts('CPU')); }
+  } catch (e) { console.warn('volto', e); faceStop(); }
+}
+function faceStop() {
+  try { FACE.track && FACE.track.stop(); FACE.video && FACE.video.remove(); } catch (e) {}
+  FACE.on = false; FACE.fl = null; FACE.video = null; FACE.track = null; mutNext = now() + 1;
+}
+const P2 = (L, i) => L[i];
+const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+// read one frame: everything measured in the camera image, then mirrored, as in a mirror
+function faceRead(L, B, asp) {
+  const g = n => { const c = B && B.find(c => c.categoryName === n); return c ? c.score : 0; };
+  const fw = dist(P2(L, 234), P2(L, 454)) || 0.001;
+  const eyeA = Math.atan2((L[263].y - L[33].y) / asp, L[263].x - L[33].x);
+  const midX = (L[234].x + L[454].x) / 2, eyesY = (L[159].y + L[386].y) / 2;
+  const yaw = (L[1].x - midX) / (fw / 2);
+  const pitch = (L[1].y - eyesY) / Math.max(0.001, L[152].y - eyesY);
+  const u1 = (L[468].x - L[33].x) / ((L[133].x - L[33].x) || 0.001), u2 = (L[473].x - L[362].x) / ((L[263].x - L[362].x) || 0.001);
+  const ewA = dist(L[33], L[133]) || 0.001, ewB = dist(L[362], L[263]) || 0.001;
+  const openA = Math.abs(L[145].y - L[159].y) / ewA, openB = Math.abs(L[374].y - L[386].y) / ewB;   // A = the eye on the left of the image
+  return {
+    roll: -eyeA, yaw: -yaw, pitch, fw, gaze: (u1 + u2) / 2 - 0.5, gy: g('eyeLookDownLeft') + g('eyeLookDownRight') - g('eyeLookUpLeft') - g('eyeLookUpRight'),
+    openA, openB, jaw: g('jawOpen'), mw: dist(L[61], L[291]) / fw, brow: g('browInnerUp') + (g('browOuterUpLeft') + g('browOuterUpRight')) / 2 - (g('browDownLeft') + g('browDownRight')) / 2
+  };
+}
+// the tongue is not among the measures of the face: look for its pink inside the open mouth
+function faceTongue(L, jaw) {
+  if (jaw < 0.1) return 0;
+  const vw = FACE.video.videoWidth, vh = FACE.video.videoHeight; if (!vw) return 0;
+  const x0 = L[78].x * vw, x1 = L[308].x * vw, y0 = L[13].y * vh, y1 = L[14].y * vh + (L[14].y - L[13].y) * vh * 0.8;
+  const w = Math.max(4, x1 - x0) * 0.6, h = Math.max(4, y1 - y0);
+  try {
+    FACE.tcx.drawImage(FACE.video, (x0 + x1) / 2 - w / 2, y0, w, h, 0, 0, 48, 36);
+    const d = FACE.tcx.getImageData(0, 0, 48, 36).data; let n = 0;
+    for (let i = 0; i < d.length; i += 4) { const r = d[i], gg = d[i + 1], b = d[i + 2]; if (r > 85 && r > gg * 1.35 && r > b * 1.15 && r + gg + b > 170) n++; }
+    return clamp((n / (d.length / 4) - 0.18) / 0.35, 0, 1);
+  } catch (e) { return 0; }
+}
+function faceTick(t, dt) {
+  if (!FACE.on) return;
+  mutNext = t + 1;   // the monster stops: it stays the one it was when the camera turned on
+  ensureTongue(M);
+  const v = FACE.video;
+  if (FACE.fl && v && v.readyState >= 2 && v.currentTime !== FACE.last) {
+    FACE.last = v.currentTime;
+    let res = null; try { res = FACE.fl.detectForVideo(v, performance.now()); } catch (e) {}
+    const L = res && res.faceLandmarks && res.faceLandmarks[0];
+    if (L && L.length > 473) {
+      const r = faceRead(L, res.faceBlendshapes && res.faceBlendshapes[0] && res.faceBlendshapes[0].categories, v.videoWidth / v.videoHeight || 4 / 3);
+      if (!FACE.base) { FACE.cal.push(r); if (FACE.cal.length >= 12) { const B = {}; for (const k in r) B[k] = FACE.cal.reduce((s, q) => s + q[k], 0) / FACE.cal.length; FACE.base = B; } }
+      if (FACE.base) {
+        const B = FACE.base;
+        FACE.tgt = {
+          yaw: clamp((r.yaw - B.yaw) * 1.6, -1, 1), pitch: clamp((r.pitch - B.pitch) * 4, -1, 1), roll: r.roll - B.roll,
+          zoom: clamp(Math.pow(r.fw / B.fw, 1.3), 0.45, 2.4), gx: clamp(-(r.gaze - B.gaze) * 7, -1, 1), gy: clamp((r.gy - B.gy) * 1.6, -1, 1),
+          eR: clamp((r.openA / B.openA - 0.35) / 0.65, 0.04, 1.3), eL: clamp((r.openB / B.openB - 0.35) / 0.65, 0.04, 1.3),
+          jaw: r.jaw, mw: clamp(Math.pow(r.mw / B.mw, 2.2), 0.55, 1.8), brow: clamp(r.brow - B.brow, -1, 1), tongue: faceTongue(L, r.jaw)
+        };
+        FACE.seen = t;
+      }
+    }
+  }
+  const tg = t - FACE.seen < 1 ? FACE.tgt : FV0();   // when the face goes away, the monster returns to rest
+  if (tg) for (const k in FACE.v) FACE.v[k] += (tg[k] - FACE.v[k]) * (1 - Math.exp(-dt * (k === 'eR' || k === 'eL' ? 30 : 14)));
+  const F = FACE.v;
+  Lf.rot = F.roll; Lf.dx = F.yaw * 0.2; Lf.dy = F.pitch * 0.08; Lf.zoom = F.zoom;
+  Lf.gx = F.gx; Lf.gy = F.gy; Lf.ej = 0;
+  Lf.mouth = 0.3 + F.jaw * 3.4; Lf.mw = F.mw; Lf.by = -F.brow * 0.09; Lf.tongue = F.tongue;
+  Lf.yaw = F.yaw; Lf.pitch = F.pitch;
+  blinkAt = t + 5; Lf.blinkU = 2;
+}
+// depth of each group, for the turning of the head
+const PAR = { back: -0.2, side: -0.1, top: -0.06, extras: -0.03, head: 0.03, marks: 0.11, eyes: 0.19, brows: 0.2, mouth: 0.22, app: 0.28, nose: 0.34 };
+// a tongue ready inside every mouth, hidden until the face in front of the camera puts out its own
+function ensureTongue(m) {
+  if (!m || m.ftg) return; m.ftg = true;
+  const raws = Array.isArray(m.raw.mouth) ? m.raw.mouth : [m.raw.mouth];
+  for (const o of raws) {
+    if (!o) continue;
+    let my = 0.3; for (const id in o) if (o[id].mc !== undefined) { my = o[id].mc; break; }
+    const kind = pick(['plain', 'plain', 'fork', 'whip', 'leaf', 'chain']);
+    tongue(o, 0, my, rnd(0.32, 0.5), rnd(0.09, 0.13), 8.45, kind, 0, { mc: my, ft: 1 });
+  }
+  place(m, 'mouth'); paint(m); T = targetsOf(m); retarget(now(), { dur: [0.3, 0.6], stagger: 0.2, eases: ['inOutSine'], pattern: ['out'] });
+}
+if (/[?&]volto\b/.test(location.search)) faceStart();
+
 /* ================= interface: nothing on screen ================= */
 const info = $('info');
 function fullscreen() {
@@ -2237,14 +2352,16 @@ addEventListener('keydown', e => {
   else if (k === 'escape') info.classList.remove('open');
   else if (k === 'l') LUX.on ? luceStop() : luceStart();
   else if (k === 'c' && LUX.on) luceCal();
-  else if (k === 'v' && LUX.on) document.body.classList.toggle('showcam');
+  else if (k === 'v') document.body.classList.toggle('showcam');
+  else if (k === 'm') FACE.on ? faceStop() : faceStart();
+  else if (k === 'k' && FACE.on) { FACE.base = null; FACE.cal = []; }
 });
 let idleTo;
 const wake = () => { document.body.classList.remove('idle'); clearTimeout(idleTo); idleTo = setTimeout(() => document.body.classList.add('idle'), 2000); };
 addEventListener('mousemove', wake); wake();
 
 // for inspection from the console
-window.MONSTRUM = { LUX, luceStart, luceStop, disp, get M() { return M; }, get mood() { return mood; }, setMood: m => setMood(m, now()), next: () => { mutNext = 0; }, photo, bg, newMonster, mutate, COL, set: mm => { M = mm; T = targetsOf(M); fit(); retarget(now(), MOODS[mood]); } };
+window.MONSTRUM = { FACE, faceStart, faceStop, LUX, luceStart, luceStop, disp, get M() { return M; }, get mood() { return mood; }, setMood: m => setMood(m, now()), next: () => { mutNext = 0; }, photo, bg, newMonster, mutate, COL, set: mm => { M = mm; T = targetsOf(M); fit(); retarget(now(), MOODS[mood]); } };
 })();
 </script>
 </body>
