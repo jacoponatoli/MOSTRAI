@@ -2025,8 +2025,8 @@ function bgUpdate(t) {
   if (md.beat) { const P = 60 / bpm; bg.next = beat0 + (Math.floor((t - beat0) / P) + pick([4, 8, 8, 16])) * P; }
   else bg.next = t + rnd(4, 15) / tempo;
 }
-const CC = c => COL[c === 'bg' ? bg.shown : c] || COL.black;
-function drawBg() { ctx.fillStyle = COL[bg.shown]; ctx.fillRect(0, 0, W, H); }
+const CC = c => LUX.on ? luceCol(c === 'bg' ? bg.shown : c, c === 'bg' ? 0.5 : PS) : COL[c === 'bg' ? bg.shown : c] || COL.black;
+function drawBg() { ctx.fillStyle = LUX.on ? luceCol(bg.shown, 0.5) : COL[bg.shown]; ctx.fillRect(0, 0, W, H); }
 
 /* ================= drawing ================= */
 function piecePath(d, x, y, w, h, r) {
@@ -2039,6 +2039,7 @@ function piecePath(d, x, y, w, h, r) {
   return path;
 }
 function drawPiece(d, t) {
+  PS = d.lux === undefined ? (d.lux = R()) : d.lux;
   let x = d.x, y = d.y, w = d.w * d.s, h = d.h * d.s, r = d.r;
   const m = d.meta || {};
   if (d.g === 'head') { const k = Lf.hs; x *= k; y = 0.02 + (y - 0.02) * k; w *= k; h *= k; if (m.jw) y += (Lf.mouth - 1) * 0.12; }
@@ -2130,7 +2131,24 @@ requestAnimationFrame(frame);
 const COL0 = Object.assign({}, COL);
 const hex2 = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
 const RGB0 = {}; for (const k in COL0) RGB0[k] = hex2(COL0[k]);
-const LUX = { on: false, video: null, track: null, cv: null, cx: null, raw: 0.5, base: 0, s: 0, cal: 0, samples: [], next: 0 };
+// every colour walks its own ladder: red to crimson, maroon, black; yellow to orange, ochre, brown; blue to navy, night;
+// white to greys; and towards the light: pink, cream, sky blue; black to greys. Each piece jumps from step to step at its own threshold.
+const LAD = {
+  red: [['#ffe0e4', '#ffb3be', '#ff7a8c', '#ff3b4f'], '#e3051b', ['#c0001f', '#930019', '#640012', '#36000a', '#000000']],
+  yellow: [['#fffbe6', '#fff3a8', '#ffea6b', '#ffe033'], '#ffd500', ['#ffb000', '#e07a00', '#a65200', '#5c2c00', '#000000']],
+  blue: [['#e3ecff', '#a9c4ff', '#6c95f5', '#2f63d6'], '#0b3fa8', ['#08308a', '#05226a', '#031448', '#010826', '#000000']],
+  white: [['#ffffff', '#ffffff', '#ffffff', '#ffffff'], '#ffffff', ['#e6e6e6', '#b3b3b3', '#7a7a7a', '#3d3d3d', '#000000']],
+  black: [['#d9d9d9', '#a6a6a6', '#6b6b6b', '#333333'], '#000000', ['#000000', '#000000', '#000000', '#000000', '#000000']]
+};
+const LGAIN = { red: [1.1, 1.1], yellow: [0.85, 1.25], blue: [1.3, 0.85], white: [0.8, 1], black: [1, 1.15] };   // [towards dark, towards light]
+let PS = 0.5;   // the sensitivity of the piece being drawn
+function luceCol(c, sens) {
+  const L = LAD[c]; if (!L) return COL0[c] || '#000000';
+  const v = LUX.s, g = LGAIN[c][v < 0 ? 0 : 1], e = Math.abs(v) * g * (0.45 + 1.1 * sens);
+  if (v < 0) { const i = Math.min(L[2].length, Math.floor(e * L[2].length * 1.15)); return i ? L[2][i - 1] : L[1]; }
+  const i = Math.min(L[0].length, Math.floor(e * L[0].length * 1.15)); return i ? L[0][L[0].length - i] : L[1];
+}
+const LUX = { on: false, t0: 0, video: null, track: null, cv: null, cx: null, raw: 0.5, base: 0, s: 0, cal: 0, samples: [], next: 0 };
 function luceTone(v) {   // v from -1 (black) to +1 (light)
   for (const k in RGB0) {
     const c = RGB0[k], q = v < 0 ? c.map(x => x * (1 + v)) : c.map(x => x + (255 - x) * v);
@@ -2145,13 +2163,13 @@ async function luceStart() {
     document.body.appendChild(v); await v.play();
     LUX.video = v; LUX.track = st.getVideoTracks()[0];
     LUX.cv = document.createElement('canvas'); LUX.cv.width = 32; LUX.cv.height = 24; LUX.cx = LUX.cv.getContext('2d', { willReadFrequently: true });
-    LUX.on = true; luceCal(1.4);
+    LUX.on = true; LUX.s = -1; LUX.t0 = now(); luceCal(1.2);
   } catch (e) {}
 }
 function luceStop() {
   if (!LUX.on) return;
   try { LUX.track.stop(); LUX.video.remove(); } catch (e) {}
-  LUX.on = false; LUX.s = 0; luceTone(0);
+  LUX.on = false; LUX.s = 0; LUX.f = undefined; luceTone(0);
 }
 // learn the light of the room; after the camera has adjusted, try to lock its exposure, so that a hand really darkens it
 function luceCal(delay) {
@@ -2169,16 +2187,18 @@ function luce(t, dt) {
       LUX.raw = sum / (d.length / 4) / 255;
     } catch (e) {}
   }
-  if (!LUX.base) {   // calibration on the light of the room
+  if (!LUX.base) {   // calibration on the light of the room (meanwhile the monster stays in the dark)
     if (t > LUX.cal - 0.6) LUX.samples.push(LUX.raw);
     if (t >= LUX.cal && LUX.samples.length) LUX.base = clamp(LUX.samples.reduce((a, b) => a + b, 0) / LUX.samples.length, 0.06, 0.85);
     return;
   }
-  const b = LUX.base, l = LUX.raw, dz = 0.12;   // a small dead zone: in the light of the room the colours stay pure
+  LUX.f = LUX.f === undefined ? LUX.raw : LUX.f + (LUX.raw - LUX.f) * (1 - Math.exp(-dt * 10));   // a little smoothing against the noise of the sensor
+  const b = LUX.base, l = LUX.f, dz = 0.03;
   let v = 0;
-  if (l < b) { const u = clamp((1 - l / b - dz) / (1 - dz), 0, 1); v = -Math.pow(u, 0.75); }
-  else { const u = clamp(((l - b) / Math.max(0.05, 0.98 - b) - dz) / (1 - dz), 0, 1); v = 0.9 * Math.pow(u, 0.8); }
-  LUX.s += (v - LUX.s) * (1 - Math.exp(-dt * 7));
+  if (l < b) v = -clamp(((b - l) / b - dz) * 2.2, 0, 1);            // a hand a little closer is already enough
+  else v = clamp(((l - b) / Math.max(0.05, 1 - b) - dz) * 2.6, 0, 1);
+  const rate = t - LUX.t0 < 4 ? 1.6 : 9;                             // when it turns on, the colours come out of the black slowly
+  LUX.s += (v - LUX.s) * (1 - Math.exp(-dt * rate));
   luceTone(LUX.s);
 }
 if (/[?&]luce\b/.test(location.search)) luceStart();
