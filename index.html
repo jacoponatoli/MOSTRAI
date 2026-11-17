@@ -32,7 +32,7 @@ body.showcam #voltovid { opacity: 1; }
   <p>A single monstrous face, always new.</p>
   <p>Its genome mixes a bestiary: strange, monstrous and ordinary animals (anglerfish, bats, mandrills, star-nosed moles, axolotls, spiders, mantises, octopuses, lampreys), plants and fungi (flytraps, rafflesia, lotus pods, cordyceps, mandrakes), and sculpture (Brancusi, Moore, Calder, Giacometti, Fontana). Sometimes it turns into pure geometry. It insists on what makes a face frightening: eyes with too much white or none at all, sunken sockets, mouths cut too wide, jaws hanging too long, faces too long, features sliding or upside down, stillness and then a snap. Other voices enter the flow: Francis Bacon, Giulia Cenci, vampires and stitched creatures of novels, films and comics, frightening clowns, strange children, the man with the growths, the devils of medieval frescoes, gargoyles, the demons of anime, zombies; masculine, feminine and queer signs worn together; the opened body of Monique Wittig's <i>Le corps lesbien</i>. Tongues, teeth, bones, gills, wounds, mucus, smoke. Sometimes the monster is only lines. Then Ulisse Aldrovandi's woodcuts of monsters, with their hatching; Paul B. Preciado's monster that speaks from its cage; the threat faces of animals — wrinkled muzzles, lips pulled over the canines, ears pinned back, bristling fur, the open gape. The grotesque body: genital forms of carnival and the margins, a little foot growing from the head, parts implanted in the wrong place. Insects too: their legs growing out of the face, things crawling across it, eggs, larvae, swarms, nests, cocoons, and everything filamentous — silk, cobwebs, hairs, cilia. At times the face stays still and only the mouth and its tongues move; at times almost everything is taken away. It watches you.</p>
   <p>With <i>?luce</i> in the address, or the key L, the camera measures the light: the colours become iridescent, waves of hue running across the shapes, faster and wider with more light, surging at every change of light; covering it, everything sinks into black. C recalibrates, V shows the camera.</p>
-  <p>With <i>?volto</i>, or the key M, the monster stops and becomes a mirror of the face in front of the camera: head, eyes, blinks, mouth, smile, brows, tongue (read by MediaPipe Face Landmarker). K recalibrates on the face at rest. The visitor's hands, when they enter the frame, become monstrous hands whose every finger changes its nature as it moves; when they touch the face something different happens each time: pinched and dragged, melted, dented, swollen, twisted, burst, infected, bitten. The face heals slowly.</p>
+  <p>With <i>?volto</i>, or the key M, the monster stops and becomes a mirror of the face in front of the camera: head, eyes, blinks, mouth, smile, brows, tongue (read by MediaPipe Face Landmarker). K recalibrates on the face at rest. The visitor's hands, when they enter the frame, become monstrous hands whose every finger changes its nature as it moves; when they touch the face something different happens each time: the eyes fly onto the fingertips, the face melts, its pieces flee from the hand, what is touched sticks to the hand and stretches, the mouth flies into the palm and bites.</p>
   <p>The machine invents a monster and never stops changing it: a face made of geometric shapes in the three primary colours, white and black, on a ground that changes colour too. It mixes the grammar of many monsters without copying any: Mesoamerican and Andean masks, Amazonian feather crowns, Caribbean carnival, the demon faces of India, Sri Lanka and Bali, Himalayan masks, oni and yokai, anime, taotie and opera faces, African and Oceanic masks, gorgons, medieval grotesques, commedia and carnival, skulls, cartoons, robots, aliens, insects, sea creatures, cubism, Miró, the Bauhaus, pixels, the first idols. Eyes, horns, crowns, teeth, tongues, beaks, ears and tentacles are reinvented at every moment, while the face breathes, blinks, looks around, chews and sways, at ever-changing speeds and rhythms.</p>
   <p><i>monstrum</i>: from <i>monere</i>, to warn. Cicero heard in it <i>monstrare</i>, to show.</p>
   <p>A project by Jacopo Natoli, 2026</p>
@@ -2344,11 +2344,12 @@ if (/[?&]volto\b/.test(location.search)) faceStart();
    MediaPipe Hand Landmarker finds up to two hands; each is redrawn in front of the stopped monster, at the scale of the face.
    Every finger changes its nature as it moves — claw, tentacle, webbed, bone, thorn, eye, doubled, snake, root, melting, insect
    leg, little mouth — and stretches or shrinks. When a hand touches the face, something happens, different every time:
-   pinching squeezes and drags it, it melts, it dents, it swells, it twists, it bursts apart, it gets infected with the hand's
-   colour, the mouth snaps at it. The face heals slowly when the hand goes away. */
+   the eyes fly onto the fingertips, it melts and runs down, its pieces flee from the hand as from a magnet, what the hand
+   touched sticks to it and stretches, the mouth leaves the face for the palm and bites. It comes back together when the hand goes. */
 const HM_MODEL = 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
 const HSTY = ['claw', 'tentacle', 'webbed', 'bone', 'thorn', 'eyes', 'double', 'snake', 'root', 'drip', 'insect', 'mouthtip'];
-const TMODES = ['squeeze', 'melt', 'dent', 'swell', 'twist', 'burst', 'infect', 'bite'];
+const TMODES = ['eyesfly', 'melt', 'repel', 'stick', 'mouthfly'];   // few, and very visible
+let TORDER = [];
 const HANDS = { hl: null, odd: false, list: [], fx: [] };   // fx: the marks the hands leave on the face
 const FING = [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16], [17, 18, 19, 20]];
 async function handsLoad(vision, files) {
@@ -2379,44 +2380,68 @@ function handsTick(t, dt) {
   for (const h of HANDS.list) {
     // every finger changes its nature as it moves, and stretches or shrinks
     FING.forEach((F, f) => { if (h.mv[f] > 0.14) { h.mv[f] = 0; h.sty[f] = pick(HSTY.filter(s => s !== h.sty[f])); h.lenT[f] = pick([0.6, 0.8, 1, 1.3, 1.7, 2.2]); } h.len[f] += (h.lenT[f] - h.len[f]) * (1 - Math.exp(-dt * 6)); });
-    // touching the face
-    const P = h.pts, tips = FING.map(F => P[F[3]]), inside = tips.filter(p => inHead(p, 1.05));
-    const pinch = Math.hypot(P[4][0] - P[8][0], P[4][1] - P[8][1]) < Math.hypot(P[0][0] - P[9][0], P[0][1] - P[9][1]) * 0.35;
-    const touching = inside.length > 0 || inHead(P[9], 0.9);
-    if (touching) {
-      const c = inside.length ? [inside.reduce((s, p) => s + p[0], 0) / inside.length, inside.reduce((s, p) => s + p[1], 0) / inside.length] : [P[9][0], P[9][1]];
-      if (!h.fx || !h.fx.on) {   // a new contact: a new kind of encounter
-        const last = HANDS.fx.length ? HANDS.fx[HANDS.fx.length - 1].mode : null;
-        h.fx = { on: true, mode: pick(TMODES.filter(m => m !== last)), c: c.slice(), c0: c.slice(), amt: 0, acc: 0, t0: t, seed: R() * 9, col: handCols()[0] };
-        HANDS.fx.push(h.fx); if (HANDS.fx.length > 6) HANDS.fx.shift();
+    // near the face: something happens, a different thing at every new contact
+    const P = h.pts, near = P.some(p => inHead(p, h.fx && h.fx.on && h.fx.mode === 'stick' ? 2.2 : 1.3));   // what holds keeps holding further away
+    if (near) {
+      if (!h.fx || !h.fx.on) {
+        if (!TORDER.length) TORDER = shuffle(TMODES.slice());
+        h.fx = { on: true, mode: TORDER.pop(), h, c0: P[9].slice(), amt: 0, acc: 0, t0: t, seed: R() * 9 };
+        HANDS.fx = HANDS.fx.filter(e => e.amt > 0.05 && e.h !== h); HANDS.fx.push(h.fx);
       }
-      const e = h.fx; e.c[0] += (c[0] - e.c[0]) * 0.3; e.c[1] += (c[1] - e.c[1]) * 0.3;
-      if (e.mode === 'squeeze') { e.pinch = pinch; if (pinch && !e.grab) e.grab = e.c.slice(); if (!pinch) e.grab = null; }
-      e.amt = Math.min(1, e.amt + dt * 2.5); e.acc += dt;
+      h.fx.amt = Math.min(1, h.fx.amt + dt * 3); h.fx.acc += dt;
     } else if (h.fx) h.fx.on = false;
   }
-  for (const e of HANDS.fx) if (!e.on) { e.amt = Math.max(0, e.amt - dt * 0.18); if (e.mode === 'squeeze') e.grab = null; }   // the face heals slowly
+  for (const e of HANDS.fx) if (!e.on) e.amt = Math.max(0, e.amt - dt * 0.4);   // the face comes back together when the hand goes away
   HANDS.fx = HANDS.fx.filter(e => e.on || e.amt > 0.01);
-  // the mouth snaps when a hand comes near it
-  for (const e of HANDS.fx) if (e.mode === 'bite' && e.amt > 0) Lf.mouth = Math.max(Lf.mouth, 0.3 + e.amt * (1.6 + 1.6 * Math.max(0, Math.sin((t - e.t0) * 9))));
+  for (const e of HANDS.fx) if (e.mode === 'mouthfly' && e.amt > 0) Lf.mouth = Math.max(Lf.mouth, 0.4 + e.amt * (1.2 + 1.8 * Math.max(0, Math.sin((t - e.t0) * 10))));   // and it bites
 }
-// how the touches change one piece of the face (monster units)
+// how the hands change each piece of the face (monster units)
 let PINF = null; const TQ = { x: 0, y: 0, w: 0, h: 0, r: 0 };
+const ease = x => x * x * (3 - 2 * x);
 function touchDeform(d, q) {
   PINF = null;
+  const m = d.meta || {};
   for (const e of HANDS.fx) {
-    const dx = q.x - e.c[0], dy = q.y - e.c[1], dd = Math.hypot(dx, dy) || 1e-4, rad = e.mode === 'melt' || e.mode === 'infect' ? 0.42 : 0.32; let f = e.amt * Math.exp(-Math.pow(dd / rad, 2));
-    if (f < 0.002) continue;
-    const big = Math.max(Math.abs(q.w), Math.abs(q.h)); if (big > 0.45) f *= 0.45 / big * 0.6;   // the big shapes give way less
+    const P = e.h.pts, A = ease(e.amt), tips = [P[4], P[8], P[12], P[16], P[20]], palm = [(P[0][0] + P[9][0]) / 2, (P[0][1] + P[9][1]) / 2];
+    const seed = (d.lux || 0.5) * 17 + e.seed;
     switch (e.mode) {
-      case 'squeeze': { const k = 1 - 0.65 * f; q.x = e.c[0] + dx * k; q.y = e.c[1] + dy * (1 - 0.3 * f); q.w *= 1 - 0.5 * f; if (e.grab) { q.x += (e.c[0] - e.grab[0]) * f * 1.6; q.y += (e.c[1] - e.grab[1]) * f * 1.6; q.h *= 1 + f; } break; }
-      case 'melt': { const s = 0.5 + 0.5 * Math.sin((d.lux || 0.5) * 40 + e.seed); q.y += f * Math.min(1.2, e.acc * 0.35 + 0.1) * (0.4 + s); q.h *= 1 + f * 1.8; q.w *= 1 - 0.35 * f; break; }
-      case 'dent': q.x += dx / dd * f * 0.2; q.y += dy / dd * f * 0.2; q.w *= 1 - 0.4 * f; q.h *= 1 - 0.4 * f; break;
-      case 'swell': q.w *= 1 + f * 1.1; q.h *= 1 + f * 1.1; q.x += dx * f * 0.4; q.y += dy * f * 0.4; break;
-      case 'twist': { const a = f * 2.4 * Math.sin(e.seed + 1), c = Math.cos(a), s = Math.sin(a); q.x = e.c[0] + dx * c - dy * s; q.y = e.c[1] + dx * s + dy * c; q.r += a; break; }
-      case 'burst': { const s = (d.lux || 0.5) * 9 + e.seed; q.x += dx / dd * f * (0.25 + 0.3 * Math.sin(s)); q.y += dy / dd * f * (0.25 + 0.3 * Math.cos(s)) - f * 0.05; q.r += f * 3 * Math.sin(s * 3); break; }
-      case 'infect': if (f > 0.25 + 0.5 * (d.lux || 0.5)) PINF = e.col; q.w *= 1 + 0.15 * f * Math.sin(ft * 6 + (d.lux || 0) * 20); break;
-      case 'bite': q.x += dx * f * 0.1; break;
+      case 'eyesfly': {   // the eyes leave the face and go to sit on the fingertips
+        if (d.g !== 'eyes' && d.g !== 'brows') break;
+        const ec = m.ec || [q.x, q.y], i = Math.abs(Math.round(ec[0] * 9 + ec[1] * 5)) % 5, tp = tips[i];
+        const wob = 0.04 * Math.sin(ft * 3 + i);
+        const g = 1 + 0.9 * A; q.x = tp[0] + wob * A + (q.x - ec[0]) * g + (ec[0] - tp[0]) * (1 - A); q.y = tp[1] - 0.07 * A + (q.y - ec[1]) * g + (ec[1] - tp[1]) * (1 - A); q.w *= g; q.h *= g; q.r += A * 0.6 * Math.sin(ft * 2 + i);
+        break;
+      }
+      case 'mouthfly': {   // the mouth goes to the palm, and bites
+        if (d.g !== 'mouth' && d.g !== 'app') break;
+        const mc = m.mc !== undefined ? m.mc : 0.3;
+        q.x += (palm[0] - 0) * A; q.y += (palm[1] - mc) * A;
+        break;
+      }
+      case 'melt': {   // what is under the hand melts and runs down
+        let dmin = 9; for (const tp of tips) dmin = Math.min(dmin, Math.abs(q.x - tp[0]));
+        const f = A * Math.exp(-Math.pow(dmin / 0.32, 2)) * (q.y > Math.min(...tips.map(p => p[1])) - 0.3 ? 1 : 0.3);
+        if (f < 0.01) break;
+        const big = Math.max(Math.abs(q.w), Math.abs(q.h)) > 0.6 ? 0.4 : 1, run = Math.min(1.4, 0.15 + e.acc * 0.45) * (0.5 + 0.5 * Math.sin(seed));
+        q.y += f * big * run; q.h *= 1 + f * big * 2.2; q.w *= 1 - 0.35 * f * big; PINF = f > 0.5 && R() < 0 ? null : PINF;
+        break;
+      }
+      case 'repel': {   // the pieces run away from the hand, live, as from a magnet
+        for (const tp of tips.concat([palm])) {
+          const dx = q.x - tp[0], dy = q.y - tp[1], dd = Math.hypot(dx, dy) || 1e-3, f = Math.max(0, 1 - dd / 0.5);
+          if (f <= 0) continue;
+          const big = Math.max(Math.abs(q.w), Math.abs(q.h)) > 0.6 ? 0.25 : 1;
+          q.x += dx / dd * f * f * 0.32 * A * big; q.y += dy / dd * f * f * 0.32 * A * big; q.r += f * A * big * Math.sin(seed) * 1.5;
+        }
+        break;
+      }
+      case 'stick': {   // what the hand touched sticks to it and follows it, stretching the face
+        const dx = q.x - e.c0[0], dy = q.y - e.c0[1], f = Math.exp(-Math.pow(Math.hypot(dx, dy) / 0.6, 2));
+        if (f < 0.02) break;
+        const big = Math.max(Math.abs(q.w), Math.abs(q.h)) > 0.6 ? 0.5 : 1;
+        q.x += (P[9][0] - e.c0[0]) * f * A * big; q.y += (P[9][1] - e.c0[1]) * f * A * big; q.h *= 1 + 0.6 * f * A * big;
+        break;
+      }
     }
   }
 }
